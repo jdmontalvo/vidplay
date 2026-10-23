@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="vidplay_background">#0B0B10</color>
+    <color name="vidplay_surface">#15151E</color>
+    <color name="vidplay_primary">#8B7CFF</color>
+    <color name="vidplay_on_primary">#0B0B10</color>
+    <color name="vidplay_secondary">#4DD0E1</color>
+    <color name="ic_launcher_background">#241C4A</color>
+</resources>

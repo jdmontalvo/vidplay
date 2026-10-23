@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">VidPlay</string>
+    <string name="notification_channel_playback">Reproducción</string>
+    <string name="notification_channel_transfer">Baúl en proceso</string>
+    <string name="notification_channel_general">Avisos</string>
+    <string name="notification_transfer_title">Procesando vídeo</string>
+    <string name="notification_transfer_text">Preparando el baúl cifrado…</string>
+    <string name="notification_import_done">Vídeo ocultado en el baúl</string>
+    <string name="notification_export_done">Vídeo restaurado y visible</string>
+    <string name="player_error_title">No se pudo reproducir</string>
+    <string name="player_error_generic">Este archivo usa un formato o códec que el dispositivo no puede reproducir. Prueba con otro reproductor o exporta el vídeo.</string>
+    <string name="cd_play">Reproducir</string>
+    <string name="cd_pause">Pausar</string>
+    <string name="cd_back">Atrás</string>
+    <string name="cd_more">Más opciones</string>
+    <string name="cd_lock">Bloquear controles</string>
+    <string name="cd_unlock">Desbloquear controles</string>
+    <string name="cd_zoom_reset">Restablecer zoom</string>
+    <string name="cd_rewind">Retroceder</string>
+    <string name="cd_forward">Avanzar</string>
+    <string name="cd_next">Siguiente</string>
+    <string name="cd_previous">Anterior</string>
+    <string name="cd_subtitles">Subtítulos</string>
+    <string name="cd_audio">Pista de audio</string>
+    <string name="cd_aspect">Relación de aspecto</string>
+    <string name="cd_speed">Velocidad</string>
+    <string name="cd_pip">Imagen en imagen</string>
+    <string name="cd_timer">Temporizador</string>
+    <string name="cd_rotate">Rotar</string>
+    <string name="cd_close">Cerrar</string>
+    <string name="cd_check">Aceptar</string>
+    <string name="cd_search">Buscar</string>
+    <string name="cd_sort">Ordenar</string>
+    <string name="cd_add">Añadir</string>
+    <string name="cd_delete">Eliminar</string>
+    <string name="cd_restore">Restaurar</string>
+    <string name="cd_shield">Baúl cifrado</string>
+    <string name="cd_folder">Carpeta</string>
+    <string name="cd_more_vert">Más</string>
+</resources>
