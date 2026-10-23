@@ -32,6 +32,7 @@ app\build\outputs\apk\debug\app-debug.apk
 
 ```powershell
 .\scripts\install-debug.ps1
+.\scripts\run-device-tests.ps1   # test de Keystore/PIN (opcional)
 ```
 
 Si HyperOS bloquea `adb install`:

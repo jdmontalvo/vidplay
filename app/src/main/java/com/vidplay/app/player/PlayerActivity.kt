@@ -378,9 +378,13 @@ class PlayerActivity : FragmentActivity() {
 
     private fun parseIntent(intent: Intent?) {
         if (intent == null) return
+        val expectedToken = app.container.playerLaunchToken
         val spec = when {
             intent.action == Intent.ACTION_VIEW && intent.data != null -> {
                 val uri = intent.data!!
+                // External ACTION_VIEW may only open ordinary content/file videos.
+                // Vault playback is an internal capability and is never accepted here.
+                if (uri.scheme != "content" && uri.scheme != "file") return
                 val name = app.container.mediaStoreRepository.queryOpenableMetadata(uri)?.first
                     ?: uri.lastPathSegment
                     ?: "Vídeo"
@@ -393,6 +397,9 @@ class PlayerActivity : FragmentActivity() {
                 )
             }
             else -> {
+                // Custom playlists (including vault:// URIs) must present the
+                // per-process token. Other apps cannot forge a vault playback.
+                if (intent.getStringExtra(EXTRA_LAUNCH_TOKEN) != expectedToken) return
                 val rawUris = intent.getStringArrayListExtra(EXTRA_URIS) ?: return
                 val uris = rawUris.mapNotNull { runCatching { Uri.parse(it) }.getOrNull() }
                 if (uris.isEmpty()) return
@@ -904,6 +911,7 @@ class PlayerActivity : FragmentActivity() {
         const val EXTRA_MIME_TYPES = "com.vidplay.app.extra.MIME_TYPES"
         const val EXTRA_INDEX = "com.vidplay.app.extra.INDEX"
         const val EXTRA_START_POSITION = "com.vidplay.app.extra.START_POSITION"
+        const val EXTRA_LAUNCH_TOKEN = "com.vidplay.app.extra.LAUNCH_TOKEN"
 
         private val SUBTITLE_MIME_TYPES = arrayOf(
             "text/*",
@@ -920,6 +928,7 @@ class PlayerActivity : FragmentActivity() {
             index: Int = 0,
             startPosition: Long = 0L,
             mimeTypes: List<String> = emptyList(),
+            launchToken: String = "",
         ): Intent {
             return Intent(context, PlayerActivity::class.java).apply {
                 putStringArrayListExtra(EXTRA_URIS, ArrayList(uris.map { it.toString() }))
@@ -927,6 +936,7 @@ class PlayerActivity : FragmentActivity() {
                 putStringArrayListExtra(EXTRA_MIME_TYPES, ArrayList(mimeTypes))
                 putExtra(EXTRA_INDEX, index)
                 putExtra(EXTRA_START_POSITION, startPosition)
+                putExtra(EXTRA_LAUNCH_TOKEN, launchToken)
             }
         }
     }

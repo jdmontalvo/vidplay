@@ -31,7 +31,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
 
     val query = MutableStateFlow("")
     val sortOrder = MutableStateFlow(SortOrder.DATE_DESC)
-    val permissionGranted = MutableStateFlow(MediaPermissions.hasAnyAccess(app))
+    val permissionGranted = MutableStateFlow(MediaPermissions.hasFullAccess(app))
     val partialAccess = MutableStateFlow(MediaPermissions.hasPartialAccess(app))
 
     private val allVideos = refreshTick.flatMapLatest {
@@ -68,7 +68,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun refresh() {
-        permissionGranted.value = MediaPermissions.hasAnyAccess(getApplication())
+        permissionGranted.value = MediaPermissions.hasFullAccess(getApplication())
         partialAccess.value = MediaPermissions.hasPartialAccess(getApplication())
         refreshTick.value = refreshTick.value + 1
     }
@@ -92,6 +92,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
                 titles = list.map { it.displayName },
                 index = index,
                 mimeTypes = list.map { it.mimeType },
+                launchToken = container.playerLaunchToken,
             ),
         )
     }
@@ -105,6 +106,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
                 titles = videos.map { it.displayName },
                 index = index.coerceIn(0, videos.lastIndex),
                 mimeTypes = videos.map { it.mimeType },
+                launchToken = container.playerLaunchToken,
             ),
         )
     }
@@ -120,6 +122,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
                 listOf(uri),
                 listOf(name),
                 mimeTypes = listOf(mediaRepository.mimeType(uri)),
+                launchToken = container.playerLaunchToken,
             ),
         )
     }

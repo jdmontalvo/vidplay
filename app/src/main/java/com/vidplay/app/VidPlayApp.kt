@@ -24,6 +24,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class AppContainer(context: Context) {
+    /** Random per-process capability used to reject forged player intents. */
+    val playerLaunchToken: String = java.util.UUID.randomUUID().toString()
+
     val database: AppDatabase = Room.databaseBuilder(
         context,
         AppDatabase::class.java,

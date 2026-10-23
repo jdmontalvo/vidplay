@@ -70,8 +70,17 @@ object MediaPermissions {
         } else {
             android.Manifest.permission.READ_EXTERNAL_STORAGE
         }
-        return ContextCompat.checkSelfPermission(context, permission) ==
+        val readGranted = ContextCompat.checkSelfPermission(context, permission) ==
             android.content.pm.PackageManager.PERMISSION_GRANTED
+        if (!readGranted) return false
+        if (Build.VERSION.SDK_INT <= 28) {
+            val writeGranted = ContextCompat.checkSelfPermission(
+                context,
+                android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            if (!writeGranted) return false
+        }
+        return true
     }
 
     fun hasPartialAccess(context: Context): Boolean {

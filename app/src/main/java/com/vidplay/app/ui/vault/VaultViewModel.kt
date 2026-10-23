@@ -143,6 +143,7 @@ class VaultViewModel(app: Application) : AndroidViewModel(app) {
                 index = index,
                 startPosition = item.lastPositionMs,
                 mimeTypes = all.map { it.mimeType },
+                launchToken = container.playerLaunchToken,
             ),
         )
     }

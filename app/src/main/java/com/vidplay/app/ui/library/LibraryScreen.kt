@@ -210,6 +210,27 @@ fun LibraryScreen(
             },
         )
 
+        if (partialAccess && !permissionGranted) {
+            androidx.compose.material3.Card(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp),
+                colors = androidx.compose.material3.CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                ),
+            ) {
+                androidx.compose.foundation.layout.Row(
+                    modifier = Modifier.fillMaxWidth().padding(12.dp),
+                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                ) {
+                    Text(
+                        "Acceso parcial: solo vemos los vídeos que seleccionaste.",
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.weight(1f),
+                    )
+                    TextButton(onClick = ::requestPermission) { Text("Añadir más") }
+                }
+            }
+        }
+
         when {
             !permissionGranted && !partialAccess -> {
                 PermissionCard(

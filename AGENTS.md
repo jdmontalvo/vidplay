@@ -24,7 +24,10 @@ Implementado en código:
 - Gestos: un toque, doble toque izquierda/centro/derecha, mantener pulsado para acelerar, pellizco 1x–5x, paneo libre, deslizamiento para buscar/brillo/volumen, bloqueo.
 - Baúl: AES-256-GCM por bloques, DEK envuelta por Keystore y PIN, miniaturas cifradas, `VaultDataSource` para Media3, importación con WorkManager en primer plano, borrado del original con diálogo MediaStore/SAF, restauración con verificación SHA-256.
 - Bloqueo con biometría/credencial, PIN de recuperación, auto-bloqueo en segundo plano, `FLAG_SECURE`, títulos genéricos en notificaciones del baúl, PiP del baúl desactivado por defecto.
+- `PlayerActivity` acepta playlists internas solo con un token aleatorio por proceso; los intents externos `ACTION_VIEW` solo pueden abrir `content://`/`file://` y nunca `vault://`.
+- WorkManager usa `SystemForegroundService` con `foregroundServiceType="dataSync"` fusionado en el manifiesto (obligatorio en Android 14+).
 - Docker, scripts PowerShell, keystore de depuración fijo, build release/AAB, GPL-3.0 y documentación.
+- Release beta publicada: <https://github.com/jdmontalvo/vidplay/releases/tag/v1.0.0-beta1> (APK + AAB).
 
 Validado en dispositivo (2026-10-23):
 
@@ -75,6 +78,7 @@ Pendiente de validar en dispositivo:
 .\scripts\build-image.ps1
 .\scripts\build-debug.ps1
 .\scripts\install-debug.ps1
+.\scripts\run-device-tests.ps1   # test instrumentado de Keystore/PIN
 ```
 
 Salida: `app\build\outputs\apk\debug\app-debug.apk`.

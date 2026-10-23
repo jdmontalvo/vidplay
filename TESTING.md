@@ -10,6 +10,21 @@
 
 El POCO F7 Ultra de pruebas tiene `adb` en `C:\Android\platform-tools\adb.exe`. En HyperOS, `adb shell input tap` está bloqueado (`INJECT_EVENTS`); usa toques manuales o los hooks de depuración.
 
+## Test instrumentado de Keystore/PIN
+
+```powershell
+# Compila el APK de tests (si aún no existe)
+docker run --rm `
+  --mount type=bind,source="$PWD",target=/workspace `
+  --mount type=volume,source=vidplay-gradle-cache,target=/gradle-cache `
+  -w /workspace vidplay-android-build:latest `
+  bash -lc "./gradlew :app:assembleDebugAndroidTest"
+
+.\scripts\run-device-tests.ps1
+```
+
+El test crea una DEK, la envuelve con Android Keystore y con PBKDF2/PIN, y verifica que ambas copias la recuperan. Después borra las claves de prueba.
+
 ## Hooks de depuración
 
 Solo funcionan en builds debug (`BuildConfig.DEBUG`). Sirven para preparar el baúl sin depender de la inyección de eventos.

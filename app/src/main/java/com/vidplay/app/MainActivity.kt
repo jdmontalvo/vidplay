@@ -111,6 +111,7 @@ class MainActivity : FragmentActivity() {
                             index = 0,
                             startPosition = latest.lastPositionMs,
                             mimeTypes = listOf(latest.mimeType),
+                            launchToken = app.container.playerLaunchToken,
                         ),
                     )
                 }
