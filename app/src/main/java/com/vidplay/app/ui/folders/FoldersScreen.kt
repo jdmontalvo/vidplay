@@ -75,6 +75,10 @@ fun FoldersScreen(
         ActivityResultContracts.RequestMultiplePermissions(),
     ) { viewModel.refresh() }
 
+    val openFileLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument(),
+    ) { uri -> uri?.let { viewModel.openFile(context, it) } }
+
     val deleteLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartIntentSenderForResult(),
     ) { result ->
@@ -151,7 +155,7 @@ fun FoldersScreen(
                         )
                     },
                     onOpenFile = {
-                        Toast.makeText(context, "Abre un vídeo desde la pestaña Vídeos", Toast.LENGTH_SHORT).show()
+                        openFileLauncher.launch(arrayOf("video/*"))
                     },
                 )
             }

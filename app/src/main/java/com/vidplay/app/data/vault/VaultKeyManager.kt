@@ -22,7 +22,10 @@ import javax.crypto.spec.SecretKeySpec
  * The biometric prompt is the UI gate for the Keystore-wrapped copy. The PIN copy
  * is the recovery path if the device lock/biometrics change.
  */
-class VaultKeyManager(private val vaultDir: File) {
+class VaultKeyManager(
+    private val vaultDir: File,
+    private val keyAlias: String = DEFAULT_KEY_ALIAS,
+) {
     private val keystoreFile = File(vaultDir, ".dek")
     private val pinFile = File(vaultDir, ".pin")
     private val random = SecureRandom()
@@ -77,7 +80,7 @@ class VaultKeyManager(private val vaultDir: File) {
         pinFile.delete()
         try {
             val keyStore = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
-            if (keyStore.containsAlias(KEY_ALIAS)) keyStore.deleteEntry(KEY_ALIAS)
+            if (keyStore.containsAlias(keyAlias)) keyStore.deleteEntry(keyAlias)
         } catch (_: Exception) {
             // Best effort.
         }
@@ -111,11 +114,11 @@ class VaultKeyManager(private val vaultDir: File) {
 
     private fun getOrCreateKeystoreKey(): SecretKey {
         val keyStore = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
-        val existing = keyStore.getKey(KEY_ALIAS, null) as? SecretKey
+        val existing = keyStore.getKey(keyAlias, null) as? SecretKey
         if (existing != null) return existing
         val generator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore")
         val spec = KeyGenParameterSpec.Builder(
-            KEY_ALIAS,
+            keyAlias,
             KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT,
         )
             .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
@@ -128,7 +131,7 @@ class VaultKeyManager(private val vaultDir: File) {
     }
 
     companion object {
-        private const val KEY_ALIAS = "vidplay_vault_kek_v1"
+        private const val DEFAULT_KEY_ALIAS = "vidplay_vault_kek_v1"
         private const val PBKDF2_ITERATIONS = 210_000
     }
 }

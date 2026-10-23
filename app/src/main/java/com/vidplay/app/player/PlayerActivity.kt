@@ -81,7 +81,10 @@ class PlayerActivity : FragmentActivity() {
         onTogglePlay = { togglePlay() },
         onHideControls = { uiState.update { it.copy(controlsVisible = false) } },
         onShowControls = { uiState.update { it.copy(controlsVisible = true) } },
-        onSeekTo = { position -> controller?.seekTo(position) },
+        onSeekTo = { position ->
+            controller?.seekTo(position)
+            uiState.update { it.copy(seekPreview = null) }
+        },
         onSeekPreview = { position -> previewSeek(position) },
         onSeekBy = { delta -> seekBy(delta) },
         onPrevious = {
@@ -263,6 +266,19 @@ class PlayerActivity : FragmentActivity() {
         }
     }
 
+    override fun onStop() {
+        super.onStop()
+        // Vault content is not allowed to survive in the background notification
+        // and must be unlocked again with biometrics/PIN when the player is left.
+        val currentIsVault =
+            controller?.currentMediaItem?.localConfiguration?.uri?.scheme == "vault"
+        if (!isInPictureInPictureMode && (uiState.value.isVault || currentIsVault)) {
+            controller?.stop()
+            controller?.clearMediaItems()
+            app.container.vaultRepository.lock()
+        }
+    }
+
     override fun onDestroy() {
         savePosition()
         playerListener?.let { listener -> controller?.removeListener(listener) }
@@ -278,6 +294,11 @@ class PlayerActivity : FragmentActivity() {
         settingsJob?.cancel()
         tickerJob?.cancel()
         super.onDestroy()
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) hideSystemBars()
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -651,7 +672,8 @@ class PlayerActivity : FragmentActivity() {
             }
             AspectMode.ORIGINAL -> binding.playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
         }
-        uiState.update { it.copy(aspect = mode) }
+        binding.playerContainer.resetZoom(animated = false)
+        uiState.update { it.copy(aspect = mode, zoom = 1f) }
         flashOverlay(mode.label)
     }
 

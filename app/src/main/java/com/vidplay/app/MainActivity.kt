@@ -62,7 +62,9 @@ class MainActivity : FragmentActivity() {
                 MainScreen()
             }
         }
-        handleDebugIntent(intent)
+        if (savedInstanceState == null) {
+            handleDebugIntent(intent)
+        }
     }
 
     override fun onNewIntent(intent: Intent) {

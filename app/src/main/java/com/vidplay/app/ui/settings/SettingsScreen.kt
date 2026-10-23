@@ -105,22 +105,26 @@ fun SettingsScreen() {
             )
         }
         item {
+            var boost by remember(settings.boostSpeed) { mutableStateOf(settings.boostSpeed) }
             Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)) {
-                Text("Velocidad al mantener pulsado: ${formatSpeed(settings.boostSpeed)}")
+                Text("Velocidad al mantener pulsado: ${formatSpeed(boost)}")
                 Slider(
-                    value = settings.boostSpeed,
-                    onValueChange = { scope.launch { repository.setBoostSpeed(it) } },
+                    value = boost,
+                    onValueChange = { boost = it },
+                    onValueChangeFinished = { scope.launch { repository.setBoostSpeed(boost) } },
                     valueRange = 1.5f..4f,
                     steps = 4,
                 )
             }
         }
         item {
+            var zoom by remember(settings.maxZoom) { mutableStateOf(settings.maxZoom) }
             Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)) {
-                Text("Zoom máximo: ${String.format("%.1f", settings.maxZoom)}x")
+                Text("Zoom máximo: ${String.format("%.1f", zoom)}x")
                 Slider(
-                    value = settings.maxZoom,
-                    onValueChange = { scope.launch { repository.setMaxZoom(it) } },
+                    value = zoom,
+                    onValueChange = { zoom = it },
+                    onValueChangeFinished = { scope.launch { repository.setMaxZoom(zoom) } },
                     valueRange = 2f..8f,
                     steps = 5,
                 )

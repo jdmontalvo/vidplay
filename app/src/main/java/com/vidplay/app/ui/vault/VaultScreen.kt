@@ -271,6 +271,15 @@ fun VaultScreen(
             title = { Text("Baúl") },
             actions = {
                 if (unlocked) {
+                    if (pendingDeletes.isNotEmpty()) {
+                        IconButton(onClick = { showPendingDialog = true }) {
+                            Icon(
+                                Icons.Rounded.Warning,
+                                contentDescription = "Borrados pendientes",
+                                tint = MaterialTheme.colorScheme.secondary,
+                            )
+                        }
+                    }
                     IconButton(onClick = { importLauncher.launch(arrayOf("video/*")) }) {
                         Icon(Icons.Rounded.Add, contentDescription = "Importar vídeos")
                     }

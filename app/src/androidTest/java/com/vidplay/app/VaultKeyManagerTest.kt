@@ -19,9 +19,10 @@ class VaultKeyManagerTest {
     @Test
     fun keystoreAndPinCanUnwrapTheSameDek() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val dir = File(context.filesDir, "vault-key-test-${UUID.randomUUID()}")
+        val testId = UUID.randomUUID().toString()
+        val dir = File(context.filesDir, "vault-key-test-$testId")
         dir.mkdirs()
-        val manager = VaultKeyManager(dir)
+        val manager = VaultKeyManager(dir, "vidplay_vault_test_$testId")
         val dek = VaultCrypto.randomKey()
         try {
             manager.create(dek, "test-pin-1234")

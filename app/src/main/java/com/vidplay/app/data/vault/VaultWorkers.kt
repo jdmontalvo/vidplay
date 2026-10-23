@@ -8,6 +8,8 @@ import android.os.Build
 import android.os.SystemClock
 import android.provider.DocumentsContract
 import androidx.core.app.NotificationManagerCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingWorkPolicy
 import androidx.work.ForegroundInfo
@@ -49,6 +51,7 @@ class VaultImportWorker(
         val mime = inputData.getString(VaultWorkKeys.MIME) ?: "video/*"
         val size = inputData.getLong(VaultWorkKeys.SIZE, -1L)
         val deleteOriginal = inputData.getBoolean(VaultWorkKeys.DELETE_ORIGINAL, true)
+        val wasUnlocked = repo.isUnlocked()
 
         if (!repo.unlockForBackgroundWork()) {
             VaultTransferMonitor.failure("Desbloquea el baúl para importar")
@@ -102,6 +105,10 @@ class VaultImportWorker(
                 failed = true,
             )
             Result.failure(workDataOf(VaultWorkKeys.ERROR to message))
+        } finally {
+            if (!wasUnlocked || !ProcessLifecycleOwner.get().lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
+                repo.lock()
+            }
         }
     }
 
@@ -187,6 +194,7 @@ class VaultExportWorker(
         val auto = inputData.getBoolean(VaultWorkKeys.AUTO_DESTINATION, destination == null)
         val item = repo.item(vaultId)
             ?: return Result.failure(workDataOf(VaultWorkKeys.ERROR to "Vídeo no encontrado"))
+        val wasUnlocked = repo.isUnlocked()
         if (!repo.unlockForBackgroundWork()) {
             return Result.failure(workDataOf(VaultWorkKeys.ERROR to "Baúl bloqueado"))
         }
@@ -244,6 +252,10 @@ class VaultExportWorker(
                 failed = true,
             )
             Result.failure(workDataOf(VaultWorkKeys.ERROR to message))
+        } finally {
+            if (!wasUnlocked || !ProcessLifecycleOwner.get().lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
+                repo.lock()
+            }
         }
     }
 

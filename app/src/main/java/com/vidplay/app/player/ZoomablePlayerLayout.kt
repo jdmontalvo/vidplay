@@ -225,6 +225,9 @@ class ZoomablePlayerLayout @JvmOverloads constructor(
                     boosting = false
                     listener?.onBoostEnd()
                 }
+                if (dragging && mode == DragMode.SEEK) {
+                    listener?.onSeekCommit(0L)
+                }
                 dragging = false
                 mode = DragMode.NONE
             }

@@ -141,6 +141,12 @@ class VaultRepository(
         onProgress: suspend (read: Long, total: Long) -> Unit = { _, _ -> },
     ): VaultItemEntity = withContext(Dispatchers.IO) {
         val key = session.requireKey()
+        if (expectedSize > 0) {
+            val needed = VaultCrypto.expectedEncryptedSize(expectedSize) + 32L * 1024 * 1024
+            if (vaultDir.usableSpace < needed) {
+                throw java.io.IOException("No hay espacio suficiente en el almacenamiento interno")
+            }
+        }
         val id = UUID.randomUUID().toString()
         val target = fileFor(id)
         val thumb = thumbFileFor(id)

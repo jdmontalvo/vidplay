@@ -87,6 +87,7 @@ class PlaybackService : MediaSessionService() {
 
     override fun onTaskRemoved(rootIntent: Intent?) {
         if (player.playbackState == Player.STATE_IDLE || !player.isPlaying) {
+            app.container.vaultRepository.lockIfIdle()
             stopSelf()
         }
     }
