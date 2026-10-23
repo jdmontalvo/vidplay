@@ -91,6 +91,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
                 uris = list.map { it.uri },
                 titles = list.map { it.displayName },
                 index = index,
+                mimeTypes = list.map { it.mimeType },
             ),
         )
     }
@@ -103,6 +104,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
                 uris = videos.map { it.uri },
                 titles = videos.map { it.displayName },
                 index = index.coerceIn(0, videos.lastIndex),
+                mimeTypes = videos.map { it.mimeType },
             ),
         )
     }
@@ -113,7 +115,12 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
             ?: "Vídeo"
         mediaRepository.takePersistableRead(uri)
         context.startActivity(
-            PlayerActivity.intent(context, listOf(uri), listOf(name)),
+            PlayerActivity.intent(
+                context,
+                listOf(uri),
+                listOf(name),
+                mimeTypes = listOf(mediaRepository.mimeType(uri)),
+            ),
         )
     }
 

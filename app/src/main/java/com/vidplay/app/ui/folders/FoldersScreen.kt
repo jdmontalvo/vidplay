@@ -60,6 +60,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FoldersScreen(
+    onOpenVault: () -> Unit,
     viewModel: LibraryViewModel = viewModel(),
 ) {
     val context = LocalContext.current
@@ -103,6 +104,7 @@ fun FoldersScreen(
             Toast.makeText(context, "Desbloquea el baúl para ocultar vídeos", Toast.LENGTH_SHORT).show()
         } else {
             Toast.makeText(context, "Ocultando en el baúl…", Toast.LENGTH_SHORT).show()
+            onOpenVault()
         }
     }
 

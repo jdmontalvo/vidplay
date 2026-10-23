@@ -113,6 +113,7 @@ fun LibraryScreen(
     fun hideVideo(item: VideoItem) {
         if (viewModel.hide(context, item)) {
             Toast.makeText(context, "Ocultando en el baúl…", Toast.LENGTH_SHORT).show()
+            onOpenVault()
         } else {
             vaultPrompt = true
         }

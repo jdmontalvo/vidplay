@@ -97,7 +97,10 @@ class VaultImportWorker(
         } catch (t: Throwable) {
             val message = t.message ?: "No se pudo ocultar el vídeo"
             VaultTransferMonitor.failure(message)
-            notifyFinished(message, failed = true)
+            notifyFinished(
+                "No se pudo ocultar el vídeo. Abre VidPlay para reintentar.",
+                failed = true,
+            )
             Result.failure(workDataOf(VaultWorkKeys.ERROR to message))
         }
     }
@@ -107,11 +110,15 @@ class VaultImportWorker(
         return createForegroundInfo(null, name)
     }
 
-    private fun createForegroundInfo(progress: Int?, name: String): ForegroundInfo {
+    private fun createForegroundInfo(progress: Int?, @Suppress("UNUSED_PARAMETER") name: String): ForegroundInfo {
         val notification = Notifications.transferNotification(
             context = applicationContext,
             title = "Ocultando en el baúl",
-            text = if (progress != null) "$name · $progress%" else name,
+            text = if (progress != null) {
+                "Vídeo del baúl · $progress%"
+            } else {
+                "Preparando el baúl cifrado…"
+            },
             progress = progress,
             indeterminate = progress == null,
         )
@@ -146,9 +153,6 @@ class VaultImportWorker(
     }
 
     private fun notifyFinished(text: String, failed: Boolean = false) {
-        if (failed) {
-            VaultTransferMonitor.failure(text)
-        }
         try {
             val notification = Notifications.transferNotification(
                 context = applicationContext,
@@ -225,14 +229,20 @@ class VaultExportWorker(
                 onFailure = { t ->
                     val message = t.message ?: "No se pudo restaurar el vídeo"
                     VaultTransferMonitor.failure(message)
-                    notifyFinished(message, failed = true)
+                    notifyFinished(
+                        "No se pudo restaurar el vídeo. Abre VidPlay para reintentar.",
+                        failed = true,
+                    )
                     Result.failure(workDataOf(VaultWorkKeys.ERROR to message))
                 },
             )
         } catch (t: Throwable) {
             val message = t.message ?: "No se pudo restaurar el vídeo"
             VaultTransferMonitor.failure(message)
-            notifyFinished(message, failed = true)
+            notifyFinished(
+                "No se pudo restaurar el vídeo. Abre VidPlay para reintentar.",
+                failed = true,
+            )
             Result.failure(workDataOf(VaultWorkKeys.ERROR to message))
         }
     }
@@ -243,11 +253,15 @@ class VaultExportWorker(
         return createForegroundInfo(null, item?.displayName ?: "Vídeo")
     }
 
-    private fun createForegroundInfo(progress: Int?, name: String): ForegroundInfo {
+    private fun createForegroundInfo(progress: Int?, @Suppress("UNUSED_PARAMETER") name: String): ForegroundInfo {
         val notification = Notifications.transferNotification(
             context = applicationContext,
             title = "Restaurando vídeo",
-            text = if (progress != null) "$name · $progress%" else name,
+            text = if (progress != null) {
+                "Vídeo del baúl · $progress%"
+            } else {
+                "Restaurando vídeo del baúl…"
+            },
             progress = progress,
             indeterminate = progress == null,
         )

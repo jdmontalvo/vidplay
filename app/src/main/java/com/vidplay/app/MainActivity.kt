@@ -110,6 +110,7 @@ class MainActivity : FragmentActivity() {
                             titles = listOf(latest.displayName),
                             index = 0,
                             startPosition = latest.lastPositionMs,
+                            mimeTypes = listOf(latest.mimeType),
                         ),
                     )
                 }
@@ -189,7 +190,7 @@ private fun MainScreen() {
                 LibraryScreen(onOpenVault = { navigate("vault") })
             }
             composable("folders") {
-                FoldersScreen()
+                FoldersScreen(onOpenVault = { navigate("vault") })
             }
             composable("vault") {
                 VaultScreen()

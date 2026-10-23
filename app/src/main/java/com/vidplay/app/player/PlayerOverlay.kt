@@ -38,8 +38,12 @@ import androidx.compose.material.icons.rounded.OpenInNew
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PictureInPictureAlt
 import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.rounded.Repeat
 import androidx.compose.material.icons.rounded.Replay10
 import androidx.compose.material.icons.rounded.ScreenRotation
+import androidx.compose.material.icons.rounded.Shuffle
+import androidx.compose.material.icons.rounded.SkipNext
+import androidx.compose.material.icons.rounded.SkipPrevious
 import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material.icons.rounded.Subtitles
 import androidx.compose.material.icons.rounded.Timer
@@ -85,6 +89,10 @@ data class PlayerCallbacks(
     val onSeekTo: (Long) -> Unit,
     val onSeekPreview: (Long) -> Unit,
     val onSeekBy: (Long) -> Unit,
+    val onPrevious: () -> Unit,
+    val onNext: () -> Unit,
+    val onToggleRepeat: () -> Unit,
+    val onToggleShuffle: () -> Unit,
     val onSetSpeed: (Float) -> Unit,
     val onSetAspect: (AspectMode) -> Unit,
     val onRotate: () -> Unit,
@@ -221,6 +229,30 @@ fun PlayerOverlay(
                             },
                         )
                         DropdownMenuItem(
+                            text = {
+                                Text(
+                                    when (state.repeatMode) {
+                                        1 -> "Repetir: todo"
+                                        2 -> "Repetir: uno"
+                                        else -> "Repetir: desactivado"
+                                    },
+                                )
+                            },
+                            leadingIcon = { Icon(Icons.Rounded.Repeat, null) },
+                            onClick = {
+                                moreExpanded = false
+                                callbacks.onToggleRepeat()
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(if (state.shuffle) "Aleatorio: activado" else "Aleatorio: desactivado") },
+                            leadingIcon = { Icon(Icons.Rounded.Shuffle, null) },
+                            onClick = {
+                                moreExpanded = false
+                                callbacks.onToggleShuffle()
+                            },
+                        )
+                        DropdownMenuItem(
                             text = { Text("Cargar subtítulos") },
                             leadingIcon = { Icon(Icons.Rounded.Subtitles, null) },
                             onClick = {
@@ -322,12 +354,14 @@ fun PlayerOverlay(
                     horizontalArrangement = Arrangement.spacedBy(2.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
+                    ControlIcon(Icons.Rounded.SkipPrevious, "Anterior") { callbacks.onPrevious() }
                     ControlIcon(Icons.Rounded.Replay10, "Retroceder 10 s") { callbacks.onSeekBy(-10_000L) }
                     ControlIcon(
                         if (state.isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
                         if (state.isPlaying) "Pausar" else "Reproducir",
                     ) { callbacks.onTogglePlay() }
                     ControlIcon(Icons.Rounded.Forward10, "Avanzar 10 s") { callbacks.onSeekBy(10_000L) }
+                    ControlIcon(Icons.Rounded.SkipNext, "Siguiente") { callbacks.onNext() }
                     ControlIcon(Icons.Rounded.Speed, "Velocidad") { dialog = PlayerDialog.SPEED }
                     ControlIcon(Icons.Rounded.Subtitles, "Subtítulos") { dialog = PlayerDialog.SUBTITLES }
                     ControlIcon(Icons.Rounded.Audiotrack, "Audio") { dialog = PlayerDialog.AUDIO }

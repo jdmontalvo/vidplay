@@ -77,6 +77,8 @@ La app se compila dentro de Ubuntu 24.04 con JDK 17, Android SDK 36, build-tools
 ## Documentación
 
 - [AGENTS.md](AGENTS.md): guía técnica completa y estado del proyecto.
+- [TESTING.md](TESTING.md): hooks de depuración y matriz de pruebas.
+- [CHECKLIST_PLAY_STORE.md](CHECKLIST_PLAY_STORE.md): pasos de publicación.
 - [PRIVACY.md](PRIVACY.md): política de privacidad.
 - [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md): licencias de terceros.
 - [LICENSE](LICENSE): GNU GPL v3.0.

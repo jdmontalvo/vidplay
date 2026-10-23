@@ -51,6 +51,22 @@ class VaultCryptoTest {
     }
 
     @Test
+    fun chunksCanBeReadIndividuallyForSeeking() = runBlocking {
+        val plain = ByteArray(VaultCrypto.CHUNK_SIZE + 777) { (it * 17).toByte() }
+        val file = temp.newFile("seek.vpv")
+        VaultCrypto.encrypt(ByteArrayInputStream(plain), file, key)
+        val header = VaultCrypto.readHeader(file)
+        assertEquals(2L, header.chunkCount)
+        val restored = ByteArrayOutputStream()
+        RandomAccessFile(file, "r").use { raf ->
+            for (index in 0 until header.chunkCount) {
+                restored.write(VaultCrypto.decryptChunk(raf, header, index, key))
+            }
+        }
+        assertArrayEquals(plain, restored.toByteArray())
+    }
+
+    @Test
     fun emptyFileRoundTrip() = runBlocking {
         val file = temp.newFile("empty.vpv")
         val header = VaultCrypto.encrypt(ByteArrayInputStream(ByteArray(0)), file, key)

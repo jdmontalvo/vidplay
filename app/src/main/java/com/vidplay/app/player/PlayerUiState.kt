@@ -39,6 +39,8 @@ data class PlayerUiState(
     val subtitlesEnabled: Boolean = false,
     val aspect: AspectMode = AspectMode.FIT,
     val orientationLocked: Boolean = false,
+    val repeatMode: Int = 0,
+    val shuffle: Boolean = false,
     val overlayMessage: String? = null,
     val seekPreview: String? = null,
     val boosting: Boolean = false,

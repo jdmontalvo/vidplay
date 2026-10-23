@@ -53,12 +53,13 @@ New-Item -ItemType Directory -Force -Path (Split-Path $keystore) | Out-Null
 if ($LASTEXITCODE -ne 0) { throw "No se pudo crear la clave de release." }
 
 $relative = $keystore.Substring($root.Length).TrimStart('\', '/').Replace('\', '/')
-@"
+$content = @"
 storeFile=$relative
 storePassword=$Password
 keyAlias=$Alias
 keyPassword=$Password
-"@ | Set-Content -Path $properties -Encoding UTF8
+"@
+[System.IO.File]::WriteAllText($properties, $content, (New-Object System.Text.UTF8Encoding($false)))
 
 Write-Host "Clave de release creada: $keystore"
 Write-Host "Propiedades: $properties (ignorado por Git)"

@@ -1,6 +1,7 @@
 package com.vidplay.app.ui.vault
 
 import android.app.Application
+import android.app.RecoverableSecurityException
 import android.content.Context
 import android.content.IntentSender
 import android.net.Uri
@@ -8,11 +9,13 @@ import android.os.Build
 import android.provider.DocumentsContract
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.WorkManager
 import com.vidplay.app.VidPlayApp
 import com.vidplay.app.data.db.PendingDeleteEntity
 import com.vidplay.app.data.db.VaultItemEntity
 import com.vidplay.app.data.vault.TransferState
 import com.vidplay.app.data.vault.VaultTransferMonitor
+import com.vidplay.app.data.vault.VaultWorkKeys
 import com.vidplay.app.data.vault.VaultWorkScheduler
 import com.vidplay.app.player.PlayerActivity
 import kotlinx.coroutines.Dispatchers
@@ -139,6 +142,7 @@ class VaultViewModel(app: Application) : AndroidViewModel(app) {
                 titles = all.map { it.displayName },
                 index = index,
                 startPosition = item.lastPositionMs,
+                mimeTypes = all.map { it.mimeType },
             ),
         )
     }
@@ -169,12 +173,21 @@ class VaultViewModel(app: Application) : AndroidViewModel(app) {
             } else {
                 DeleteOriginalResult.Failed("El proveedor no permitió borrar el original")
             }
+        } catch (recoverable: RecoverableSecurityException) {
+            DeleteOriginalResult.IntentSenderReady(recoverable.userAction.actionIntent.intentSender)
         } catch (t: Throwable) {
             DeleteOriginalResult.Failed(t.message ?: "No se pudo borrar el original")
         }
     }
 
     fun clearTransfer() {
+        VaultTransferMonitor.clear()
+    }
+
+    fun cancelTransfer() {
+        val manager = WorkManager.getInstance(getApplication())
+        manager.cancelUniqueWork(VaultWorkKeys.TAG_IMPORT)
+        manager.cancelUniqueWork(VaultWorkKeys.TAG_EXPORT)
         VaultTransferMonitor.clear()
     }
 

@@ -116,14 +116,15 @@ fun VaultScreen(
     val hasVault by viewModel.hasVault.collectAsStateWithLifecycle()
     val message by viewModel.message.collectAsStateWithLifecycle()
 
-    var showSetup by remember { mutableStateOf(false) }
     var showPin by remember { mutableStateOf(false) }
     var setupMode by remember { mutableStateOf(false) }
     var pin by remember { mutableStateOf("") }
+    var pinConfirm by remember { mutableStateOf("") }
     var pinError by remember { mutableStateOf<String?>(null) }
     var restoreItem by remember { mutableStateOf<VaultItemEntity?>(null) }
     var deleteItem by remember { mutableStateOf<VaultItemEntity?>(null) }
     var pendingRestore by remember { mutableStateOf<VaultItemEntity?>(null) }
+    var pendingDeleteId by remember { mutableStateOf<Long?>(null) }
     var showPendingDialog by remember { mutableStateOf(true) }
 
     val activity = context.findFragmentActivity()
@@ -184,8 +185,10 @@ fun VaultScreen(
         ActivityResultContracts.StartIntentSenderForResult(),
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
+            pendingDeleteId?.let { viewModel.clearPending(it) }
             viewModel.refreshState()
         }
+        pendingDeleteId = null
     }
 
     fun authenticate() {
@@ -251,6 +254,7 @@ fun VaultScreen(
         scope.launch {
             when (val result = viewModel.deleteOriginal(pending)) {
                 is DeleteOriginalResult.IntentSenderReady -> {
+                    pendingDeleteId = pending.id
                     deleteOriginalLauncher.launch(IntentSenderRequest.Builder(result.sender).build())
                 }
                 DeleteOriginalResult.Deleted -> viewModel.refreshState()
@@ -285,7 +289,11 @@ fun VaultScreen(
             )
             else -> {
                 Column(modifier = Modifier.fillMaxSize()) {
-                    TransferBanner(transfer, onDismiss = viewModel::clearTransfer)
+                    TransferBanner(
+                        transfer = transfer,
+                        onDismiss = viewModel::clearTransfer,
+                        onCancel = viewModel::cancelTransfer,
+                    )
                     val pending = pendingDeletes.firstOrNull()
                     if (pending != null && showPendingDialog) {
                         PendingDeleteCard(
@@ -338,36 +346,46 @@ fun VaultScreen(
         PinDialog(
             setup = setupMode,
             pin = pin,
+            confirmPin = pinConfirm,
             error = pinError,
             onPinChange = {
                 pin = it
                 pinError = null
             },
+            onConfirmPinChange = {
+                pinConfirm = it
+                pinError = null
+            },
             onDismiss = {
                 showPin = false
                 pin = ""
+                pinConfirm = ""
                 pinError = null
             },
             onConfirm = {
-                if (it.length < 8) {
-                    pinError = "Usa al menos 8 caracteres"
-                } else if (setupMode) {
-                    viewModel.setup(it) { result ->
-                        if (result.isSuccess) {
-                            showPin = false
-                            pin = ""
-                            showSetup = false
-                        } else {
-                            pinError = result.exceptionOrNull()?.message ?: "No se pudo crear el baúl"
+                when {
+                    it.length < 8 -> pinError = "Usa al menos 8 caracteres"
+                    setupMode && it != pinConfirm -> pinError = "Los PIN no coinciden"
+                    setupMode -> {
+                        viewModel.setup(it) { result ->
+                            if (result.isSuccess) {
+                                showPin = false
+                                pin = ""
+                                pinConfirm = ""
+                            } else {
+                                pinError = result.exceptionOrNull()?.message ?: "No se pudo crear el baúl"
+                            }
                         }
                     }
-                } else {
-                    viewModel.unlockWithPin(it) { result ->
-                        if (result.isSuccess) {
-                            showPin = false
-                            pin = ""
-                        } else {
-                            pinError = result.exceptionOrNull()?.message ?: "PIN incorrecto"
+                    else -> {
+                        viewModel.unlockWithPin(it) { result ->
+                            if (result.isSuccess) {
+                                showPin = false
+                                pin = ""
+                                pinConfirm = ""
+                            } else {
+                                pinError = result.exceptionOrNull()?.message ?: "PIN incorrecto"
+                            }
                         }
                     }
                 }
@@ -500,8 +518,10 @@ private fun VaultLocked(onBiometric: () -> Unit, onPin: () -> Unit) {
 private fun PinDialog(
     setup: Boolean,
     pin: String,
+    confirmPin: String,
     error: String?,
     onPinChange: (String) -> Unit,
+    onConfirmPinChange: (String) -> Unit,
     onDismiss: () -> Unit,
     onConfirm: (String) -> Unit,
 ) {
@@ -530,6 +550,18 @@ private fun PinDialog(
                     supportingText = error?.let { { Text(it) } },
                     modifier = Modifier.fillMaxWidth(),
                 )
+                if (setup) {
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = confirmPin,
+                        onValueChange = onConfirmPinChange,
+                        singleLine = true,
+                        visualTransformation = PasswordVisualTransformation(),
+                        label = { Text("Repite el PIN") },
+                        isError = error != null,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
             }
         },
         confirmButton = {
@@ -659,7 +691,11 @@ private fun VaultCard(
 }
 
 @Composable
-private fun TransferBanner(transfer: TransferState?, onDismiss: () -> Unit) {
+private fun TransferBanner(
+    transfer: TransferState?,
+    onDismiss: () -> Unit,
+    onCancel: () -> Unit,
+) {
     if (transfer == null) return
     Card(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp),
@@ -692,7 +728,9 @@ private fun TransferBanner(transfer: TransferState?, onDismiss: () -> Unit) {
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
-                if (!transfer.running) {
+                if (transfer.running) {
+                    TextButton(onClick = onCancel) { Text("Cancelar") }
+                } else {
                     TextButton(onClick = onDismiss) { Text("Cerrar") }
                 }
             }

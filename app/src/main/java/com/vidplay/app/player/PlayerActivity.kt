@@ -84,6 +84,16 @@ class PlayerActivity : FragmentActivity() {
         onSeekTo = { position -> controller?.seekTo(position) },
         onSeekPreview = { position -> previewSeek(position) },
         onSeekBy = { delta -> seekBy(delta) },
+        onPrevious = {
+            controller?.seekToPreviousMediaItem()
+            flashOverlay("Anterior")
+        },
+        onNext = {
+            controller?.seekToNextMediaItem()
+            flashOverlay("Siguiente")
+        },
+        onToggleRepeat = { toggleRepeat() },
+        onToggleShuffle = { toggleShuffle() },
         onSetSpeed = { speed -> setSpeed(speed) },
         onSetAspect = { mode -> setAspect(mode) },
         onRotate = { toggleOrientation() },
@@ -270,6 +280,12 @@ class PlayerActivity : FragmentActivity() {
         super.onDestroy()
     }
 
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        binding.playerContainer.resetZoom(animated = false)
+        uiState.update { it.copy(zoom = 1f, controlsVisible = true) }
+    }
+
     override fun onPictureInPictureModeChanged(
         isInPictureInPictureMode: Boolean,
         newConfig: Configuration,
@@ -371,6 +387,7 @@ class PlayerActivity : FragmentActivity() {
                 LaunchSpec(
                     uris = listOf(uri),
                     titles = listOf(name),
+                    mimeTypes = listOf(intent.type ?: "video/*"),
                     startIndex = 0,
                     startPosition = intent.getLongExtra(EXTRA_START_POSITION, 0L),
                 )
@@ -383,6 +400,7 @@ class PlayerActivity : FragmentActivity() {
                 LaunchSpec(
                     uris = uris,
                     titles = titles.ifEmpty { uris.map { "Vídeo" } },
+                    mimeTypes = intent.getStringArrayListExtra(EXTRA_MIME_TYPES) ?: emptyList(),
                     startIndex = intent.getIntExtra(EXTRA_INDEX, 0).coerceIn(0, uris.lastIndex),
                     startPosition = intent.getLongExtra(EXTRA_START_POSITION, 0L),
                 )
@@ -399,6 +417,9 @@ class PlayerActivity : FragmentActivity() {
         val spec = pendingLaunch ?: return
         val c = controller ?: return
         pendingLaunch = null
+        if (spec.uris.any { it.scheme == "vault" }) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        }
         lifecycleScope.launch {
             val items = spec.uris.mapIndexed { index, uri ->
                 val title = spec.titles.getOrElse(index) { "Vídeo" }
@@ -410,6 +431,14 @@ class PlayerActivity : FragmentActivity() {
                 }
                 MediaItem.Builder()
                     .setUri(uri)
+                    .apply {
+                        if (vault) {
+                            setMimeType(
+                                spec.mimeTypes.getOrElse(index) { "video/mp4" }
+                                    .takeIf { it.startsWith("video/") } ?: "video/mp4",
+                            )
+                        }
+                    }
                     .setMediaMetadata(
                         MediaMetadata.Builder()
                             .setTitle(notificationTitle)
@@ -476,6 +505,8 @@ class PlayerActivity : FragmentActivity() {
                 subtitlesEnabled = subtitles.any { track -> track.selected },
                 isVault = isVault,
                 canOpenExternal = !isVault,
+                repeatMode = player.repeatMode,
+                shuffle = player.shuffleModeEnabled,
                 boostSpeed = settings.boostSpeed,
             )
         }
@@ -629,6 +660,30 @@ class PlayerActivity : FragmentActivity() {
             }
         }
         return null
+    }
+
+    private fun toggleRepeat() {
+        val c = controller ?: return
+        c.repeatMode = when (c.repeatMode) {
+            Player.REPEAT_MODE_OFF -> Player.REPEAT_MODE_ALL
+            Player.REPEAT_MODE_ALL -> Player.REPEAT_MODE_ONE
+            else -> Player.REPEAT_MODE_OFF
+        }
+        uiState.update { it.copy(repeatMode = c.repeatMode) }
+        flashOverlay(
+            when (c.repeatMode) {
+                Player.REPEAT_MODE_ALL -> "Repetir todo"
+                Player.REPEAT_MODE_ONE -> "Repetir uno"
+                else -> "Repetir desactivado"
+            },
+        )
+    }
+
+    private fun toggleShuffle() {
+        val c = controller ?: return
+        c.shuffleModeEnabled = !c.shuffleModeEnabled
+        uiState.update { it.copy(shuffle = c.shuffleModeEnabled) }
+        flashOverlay(if (c.shuffleModeEnabled) "Aleatorio activado" else "Aleatorio desactivado")
     }
 
     private fun toggleOrientation() {
@@ -838,6 +893,7 @@ class PlayerActivity : FragmentActivity() {
     data class LaunchSpec(
         val uris: List<Uri>,
         val titles: List<String>,
+        val mimeTypes: List<String>,
         val startIndex: Int,
         val startPosition: Long,
     )
@@ -845,6 +901,7 @@ class PlayerActivity : FragmentActivity() {
     companion object {
         const val EXTRA_URIS = "com.vidplay.app.extra.URIS"
         const val EXTRA_TITLES = "com.vidplay.app.extra.TITLES"
+        const val EXTRA_MIME_TYPES = "com.vidplay.app.extra.MIME_TYPES"
         const val EXTRA_INDEX = "com.vidplay.app.extra.INDEX"
         const val EXTRA_START_POSITION = "com.vidplay.app.extra.START_POSITION"
 
@@ -862,10 +919,12 @@ class PlayerActivity : FragmentActivity() {
             titles: List<String>,
             index: Int = 0,
             startPosition: Long = 0L,
+            mimeTypes: List<String> = emptyList(),
         ): Intent {
             return Intent(context, PlayerActivity::class.java).apply {
                 putStringArrayListExtra(EXTRA_URIS, ArrayList(uris.map { it.toString() }))
                 putStringArrayListExtra(EXTRA_TITLES, ArrayList(titles))
+                putStringArrayListExtra(EXTRA_MIME_TYPES, ArrayList(mimeTypes))
                 putExtra(EXTRA_INDEX, index)
                 putExtra(EXTRA_START_POSITION, startPosition)
             }

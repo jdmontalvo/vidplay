@@ -40,6 +40,11 @@ class VaultRepository(
     private val resolver get() = context.contentResolver
     private val vaultDir = File(context.filesDir, "vault").apply { mkdirs() }
     private val keyManager = VaultKeyManager(vaultDir)
+
+    init {
+        // Incomplete transfers never contain a usable vault file.
+        vaultDir.listFiles { file -> file.name.endsWith(".part") }?.forEach { it.delete() }
+    }
     val session = VaultSession()
     private val itemDao get() = database.vaultItemDao()
     private val pendingDao get() = database.pendingDeleteDao()
@@ -211,7 +216,7 @@ class VaultRepository(
                 }
             } else if (autoDestination && Build.VERSION.SDK_INT >= 29) {
                 val values = ContentValues().apply {
-                    put(MediaStore.Video.Media.DISPLAY_NAME, item.displayName)
+                    put(MediaStore.Video.Media.DISPLAY_NAME, safeFileName(item.displayName))
                     put(MediaStore.Video.Media.MIME_TYPE, item.mimeType)
                     put(MediaStore.Video.Media.RELATIVE_PATH, "${Environment.DIRECTORY_MOVIES}/VidPlay")
                     put(MediaStore.Video.Media.IS_PENDING, 1)
@@ -234,7 +239,7 @@ class VaultRepository(
                     Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES),
                     "VidPlay",
                 ).apply { mkdirs() }
-                val target = File(dir, item.displayName)
+                val target = File(dir, safeFileName(item.displayName))
                 FileOutputStream(target).use { out ->
                     VaultCrypto.decrypt(source, out, key, verifyHash = true, onProgress = onProgress)
                 }
@@ -251,6 +256,13 @@ class VaultRepository(
             Result.success(Unit)
         } catch (t: Throwable) {
             mediaStoreUri?.let {
+                try {
+                    resolver.delete(it, null, null)
+                } catch (_: Exception) {
+                    // Best effort.
+                }
+            }
+            destinationUri?.let {
                 try {
                     resolver.delete(it, null, null)
                 } catch (_: Exception) {
@@ -298,6 +310,11 @@ class VaultRepository(
         fileFor(item.id).delete()
         thumbFileFor(item.id).delete()
         item.thumbFile?.let { File(vaultDir, it).delete() }
+    }
+
+    private fun safeFileName(name: String): String {
+        val cleaned = name.replace(Regex("[\\\\/:*?\"<>|]"), "_").trim()
+        return cleaned.ifBlank { "video-${System.currentTimeMillis()}.mp4" }
     }
 
     private fun readMediaInfo(uri: Uri, fallbackMime: String): VaultMediaInfo {

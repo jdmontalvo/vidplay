@@ -28,7 +28,7 @@ class AppContainer(context: Context) {
         context,
         AppDatabase::class.java,
         "vidplay.db",
-    ).fallbackToDestructiveMigration(dropAllTables = true).build()
+    ).build()
 
     val settingsRepository = SettingsRepository(context)
     val mediaStoreRepository = MediaStoreRepository(context)

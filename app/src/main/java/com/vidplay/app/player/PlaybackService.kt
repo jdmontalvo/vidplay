@@ -104,7 +104,11 @@ class PlaybackService : MediaSessionService() {
     private fun updateVaultPlaybackFlag() {
         val current = player.currentMediaItem
         val isVault = current?.localConfiguration?.uri?.scheme == "vault"
+        // Keep the key alive while a vault item is loaded, including a pause, so
+        // resuming from the notification does not fail after auto-lock.
         app.container.vaultRepository.session.playbackActive =
-            isVault && (player.isPlaying || player.playbackState == Player.STATE_BUFFERING)
+            isVault &&
+            player.playbackState != Player.STATE_IDLE &&
+            player.playbackState != Player.STATE_ENDED
     }
 }
