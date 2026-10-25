@@ -1,0 +1,6 @@
+# Copia este archivo como ads.properties (ignorado por Git) y rellena tus IDs
+# de AdMob antes de compilar la release de Play. Sin este archivo, la build de
+# release desactiva los anuncios en tiempo de ejecución (ADS_CONFIGURED=false).
+
+admobAppId=ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY
+nativeUnitId=ca-app-pub-XXXXXXXXXXXXXXXX/ZZZZZZZZZZ

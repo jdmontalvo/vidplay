@@ -86,6 +86,14 @@ class PlaybackService : MediaSessionService() {
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = mediaSession
 
     override fun onTaskRemoved(rootIntent: Intent?) {
+        // Without background playback the session must disappear with the task.
+        if (!app.backgroundPlay) {
+            player.stop()
+            player.clearMediaItems()
+            app.container.vaultRepository.lockIfIdle()
+            stopSelf()
+            return
+        }
         if (player.playbackState == Player.STATE_IDLE || !player.isPlaying) {
             app.container.vaultRepository.lockIfIdle()
             stopSelf()
@@ -95,10 +103,12 @@ class PlaybackService : MediaSessionService() {
     override fun onDestroy() {
         app.container.vaultRepository.session.playbackActive = false
         mediaSession?.run {
+            player.stop()
             player.release()
             release()
         }
         mediaSession = null
+        stopForeground(STOP_FOREGROUND_REMOVE)
         super.onDestroy()
     }
 

@@ -4,6 +4,8 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -18,9 +20,9 @@ import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.PrivacyTip
 import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
@@ -54,6 +56,8 @@ fun SettingsScreen() {
     val vault = app.container.vaultRepository
     val scope = rememberCoroutineScope()
     val settings by repository.settings.collectAsStateWithLifecycle(initialValue = AppSettings())
+    val ads = app.container.ads
+    val privacyOptionsRequired by ads.privacyOptionsRequired.collectAsStateWithLifecycle()
     var privacyDialog by remember { mutableStateOf(false) }
     var licenseDialog by remember { mutableStateOf(false) }
 
@@ -73,16 +77,14 @@ fun SettingsScreen() {
         item {
             ListItem(
                 headlineContent = { Text("Saltar hacia atrás") },
-                supportingContent = { Text("${settings.seekBackMs / 1000} segundos") },
-                trailingContent = {
-                    Row {
-                        listOf(5L, 10L, 20L, 30L).forEach { seconds ->
-                            AssistChip(
-                                onClick = { scope.launch { repository.setSeekBack(seconds * 1000) } },
-                                label = { Text("$seconds") },
-                                modifier = Modifier.padding(start = 2.dp),
-                            )
-                        }
+                supportingContent = {
+                    Column {
+                        Text("${settings.seekBackMs / 1000} segundos")
+                        DurationChips(
+                            options = seekOptions(settings.seekBackMs),
+                            selectedMs = settings.seekBackMs,
+                            onSelect = { scope.launch { repository.setSeekBack(it) } },
+                        )
                     }
                 },
             )
@@ -90,16 +92,14 @@ fun SettingsScreen() {
         item {
             ListItem(
                 headlineContent = { Text("Saltar hacia delante") },
-                supportingContent = { Text("${settings.seekForwardMs / 1000} segundos") },
-                trailingContent = {
-                    Row {
-                        listOf(5L, 10L, 20L, 30L).forEach { seconds ->
-                            AssistChip(
-                                onClick = { scope.launch { repository.setSeekForward(seconds * 1000) } },
-                                label = { Text("$seconds") },
-                                modifier = Modifier.padding(start = 2.dp),
-                            )
-                        }
+                supportingContent = {
+                    Column {
+                        Text("${settings.seekForwardMs / 1000} segundos")
+                        DurationChips(
+                            options = seekOptions(settings.seekForwardMs),
+                            selectedMs = settings.seekForwardMs,
+                            onSelect = { scope.launch { repository.setSeekForward(it) } },
+                        )
                     }
                 },
             )
@@ -184,16 +184,14 @@ fun SettingsScreen() {
         item {
             ListItem(
                 headlineContent = { Text("Auto-bloqueo al salir") },
-                supportingContent = { Text("${settings.vaultAutoLockSeconds} segundos después de dejar la app, si no hay reproducción del baúl.") },
-                trailingContent = {
-                    Row {
-                        listOf(30, 60, 300).forEach { seconds ->
-                            AssistChip(
-                                onClick = { scope.launch { repository.setVaultAutoLock(seconds) } },
-                                label = { Text(if (seconds < 60) "${seconds}s" else "${seconds / 60}min") },
-                                modifier = Modifier.padding(start = 2.dp),
-                            )
-                        }
+                supportingContent = {
+                    Column {
+                        Text("${formatDuration(settings.vaultAutoLockSeconds * 1000L)} después de dejar la app, si no hay reproducción del baúl.")
+                        DurationChips(
+                            options = autoLockOptions(settings.vaultAutoLockSeconds),
+                            selectedMs = settings.vaultAutoLockSeconds * 1000L,
+                            onSelect = { scope.launch { repository.setVaultAutoLock((it / 1000).toInt()) } },
+                        )
                     }
                 },
             )
@@ -226,9 +224,31 @@ fun SettingsScreen() {
             ListItem(
                 leadingContent = { Icon(Icons.Rounded.PrivacyTip, null) },
                 headlineContent = { Text("Privacidad") },
-                supportingContent = { Text("Todo se procesa en el dispositivo. Sin internet, cuentas, analíticas ni anuncios.") },
+                supportingContent = {
+                    Text(
+                        if (ads.enabled) {
+                            "Tus vídeos se procesan en el dispositivo y nunca se suben. " +
+                                "La versión de Play carga un anuncio de Google en la biblioteca."
+                        } else {
+                            "Todo se procesa en el dispositivo. Sin internet, cuentas, analíticas ni anuncios."
+                        },
+                    )
+                },
                 modifier = Modifier.padding(vertical = 2.dp),
             )
+        }
+        if (ads.enabled && privacyOptionsRequired) {
+            item {
+                ListItem(
+                    leadingContent = { Icon(Icons.Rounded.PrivacyTip, null) },
+                    headlineContent = { Text("Opciones de privacidad") },
+                    supportingContent = { Text("Cambia tu consentimiento para los anuncios personalizados.") },
+                    trailingContent = {
+                        TextButton(onClick = { ads.showPrivacyOptions() }) { Text("Abrir") }
+                    },
+                    modifier = Modifier.padding(vertical = 2.dp),
+                )
+            }
         }
         item {
             ListItem(
@@ -250,7 +270,7 @@ fun SettingsScreen() {
         }
         item {
             Text(
-                text = "VidPlay ${BuildConfig.VERSION_NAME} · GPL-3.0 · Media3 + NextLib",
+                text = "VidCofre ${BuildConfig.VERSION_NAME} · GPL-3.0 · Media3 + NextLib",
                 modifier = Modifier.fillMaxWidth().padding(16.dp),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -263,9 +283,18 @@ fun SettingsScreen() {
             onDismissRequest = { privacyDialog = false },
             title = { Text("Privacidad") },
             text = {
+                val adsText = if (ads.enabled) {
+                    "La versión de Play usa Google AdMob para mostrar un único anuncio nativo " +
+                        "en la biblioteca, como máximo una vez por hora. AdMob puede recoger el ID de " +
+                        "publicidad y datos técnicos según tu consentimiento; puedes cambiarlo en " +
+                        "\"Opciones de privacidad\" y consultar la política completa en el repositorio. "
+                } else {
+                    "Esta versión personal no incluye anuncios ni permiso de Internet. "
+                }
                 Text(
-                    "VidPlay no tiene permiso de Internet. La biblioteca, el reproductor y el baúl funcionan " +
-                        "solo en el dispositivo. No hay cuentas, analíticas, anuncios ni subida de archivos. " +
+                    "VidCofre procesa la biblioteca, el reproductor y el baúl solo en el dispositivo. " +
+                        "Ningún vídeo, miniatura o dato del baúl sale del teléfono. " +
+                        adsText +
                         "El baúl cifra los vídeos con AES-256-GCM y la clave se guarda en Android Keystore. " +
                         "Desinstalar la app o borrar sus datos hace que el baúl sea irrecuperable.",
                 )
@@ -281,7 +310,7 @@ fun SettingsScreen() {
             text = {
                 Column {
                     Text(
-                        "VidPlay se distribuye bajo GNU General Public License v3.0. " +
+                        "VidCofre se distribuye bajo GNU General Public License v3.0. " +
                             "Incluye Media3 (Apache-2.0) y NextLib (GPL-3.0), que a su vez incorpora FFmpeg. " +
                             "El código fuente completo está disponible en el repositorio público.",
                     )
@@ -316,4 +345,39 @@ private fun SwitchRow(title: String, checked: Boolean, onChange: (Boolean) -> Un
 
 private fun formatSpeed(speed: Float): String {
     return if (speed == speed.toInt().toFloat()) "${speed.toInt()}x" else "${speed}x"
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun DurationChips(
+    options: List<Long>,
+    selectedMs: Long,
+    onSelect: (Long) -> Unit,
+) {
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        options.forEach { ms ->
+            FilterChip(
+                selected = selectedMs == ms,
+                onClick = { onSelect(ms) },
+                label = { Text(formatDuration(ms)) },
+            )
+        }
+    }
+}
+
+/** Presets plus the stored value, so the current choice is always marked. */
+private fun seekOptions(currentMs: Long): List<Long> {
+    val currentSeconds = (currentMs / 1000).coerceAtLeast(1)
+    return (listOf(5L, 10L, 20L, 30L) + currentSeconds).distinct().sorted().map { it * 1000 }
+}
+
+private fun autoLockOptions(currentSeconds: Int): List<Long> {
+    return (listOf(30L, 60L, 300L) + currentSeconds.toLong()).distinct().sorted().map { it * 1000 }
+}
+
+private fun formatDuration(ms: Long): String {
+    val seconds = ms / 1000
+    return if (seconds < 60) "$seconds s" else "${seconds / 60} min"
 }

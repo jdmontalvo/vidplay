@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
@@ -63,6 +64,9 @@ import coil3.request.crossfade
 import coil3.video.videoFrameMillis
 import com.vidplay.app.data.media.VideoItem
 import androidx.compose.ui.platform.LocalContext
+
+/** Ads appear after the first six videos, never as the first card. */
+private const val AD_ANCHOR_INDEX = 6
 
 @Composable
 fun VideoThumbnail(
@@ -126,6 +130,7 @@ fun VideoGrid(
     onHide: (VideoItem) -> Unit,
     onDelete: (VideoItem) -> Unit,
     modifier: Modifier = Modifier,
+    adContent: (@Composable () -> Unit)? = null,
 ) {
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = 158.dp),
@@ -134,7 +139,19 @@ fun VideoGrid(
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        items(videos, key = { it.uri.toString() }) { video ->
+        items(videos.take(AD_ANCHOR_INDEX), key = { it.uri.toString() }) { video ->
+            VideoCard(video, onClick, onHide, onDelete)
+        }
+        if (adContent != null) {
+            item(
+                key = "native_ad",
+                span = { GridItemSpan(maxLineSpan) },
+                contentType = "native_ad",
+            ) {
+                adContent()
+            }
+        }
+        items(videos.drop(AD_ANCHOR_INDEX), key = { it.uri.toString() }) { video ->
             VideoCard(video, onClick, onHide, onDelete)
         }
     }
@@ -216,63 +233,90 @@ fun VideoList(
     onHide: (VideoItem) -> Unit,
     onDelete: (VideoItem) -> Unit,
     modifier: Modifier = Modifier,
+    adContent: (@Composable () -> Unit)? = null,
 ) {
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(vertical = 6.dp),
     ) {
-        items(videos, key = { it.uri.toString() }) { video ->
-            var menu by remember { mutableStateOf(false) }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onClick(video) }
-                    .padding(horizontal = 12.dp, vertical = 7.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                VideoThumbnail(
-                    video = video,
-                    modifier = Modifier.width(126.dp).aspectRatio(16f / 9f),
+        items(videos.take(AD_ANCHOR_INDEX), key = { it.uri.toString() }) { video ->
+            VideoListRow(video, onClick, onHide, onDelete)
+        }
+        if (adContent != null) {
+            item(key = "native_ad", contentType = "native_ad") {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp),
+                ) {
+                    adContent()
+                }
+            }
+        }
+        items(videos.drop(AD_ANCHOR_INDEX), key = { it.uri.toString() }) { video ->
+            VideoListRow(video, onClick, onHide, onDelete)
+        }
+    }
+}
+
+/** One video as a full-width row. Kept as its own composable so the ad item can
+ *  be inserted between two slices of the list without duplicating the row. */
+@Composable
+private fun VideoListRow(
+    video: VideoItem,
+    onClick: (VideoItem) -> Unit,
+    onHide: (VideoItem) -> Unit,
+    onDelete: (VideoItem) -> Unit,
+) {
+    var menu by remember { mutableStateOf(false) }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick(video) }
+            .padding(horizontal = 12.dp, vertical = 7.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        VideoThumbnail(
+            video = video,
+            modifier = Modifier.width(126.dp).aspectRatio(16f / 9f),
+        )
+        Spacer(Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = video.displayName,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+            )
+            Spacer(Modifier.height(3.dp))
+            Text(
+                text = "${video.bucketName} · ${formatDuration(video.durationMs)}",
+                fontSize = 11.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Box {
+            IconButton(onClick = { menu = true }) {
+                Icon(Icons.Rounded.MoreVert, contentDescription = "Más opciones")
+            }
+            DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                DropdownMenuItem(
+                    text = { Text("Ocultar en el baúl") },
+                    leadingIcon = { Icon(Icons.Rounded.VisibilityOff, null) },
+                    onClick = {
+                        menu = false
+                        onHide(video)
+                    },
                 )
-                Spacer(Modifier.width(12.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = video.displayName,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                    )
-                    Spacer(Modifier.height(3.dp))
-                    Text(
-                        text = "${video.bucketName} · ${formatDuration(video.durationMs)}",
-                        fontSize = 11.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-                Box {
-                    IconButton(onClick = { menu = true }) {
-                        Icon(Icons.Rounded.MoreVert, contentDescription = "Más opciones")
-                    }
-                    DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                        DropdownMenuItem(
-                            text = { Text("Ocultar en el baúl") },
-                            leadingIcon = { Icon(Icons.Rounded.VisibilityOff, null) },
-                            onClick = {
-                                menu = false
-                                onHide(video)
-                            },
-                        )
-                        DropdownMenuItem(
-                            text = { Text("Eliminar del dispositivo") },
-                            leadingIcon = { Icon(Icons.Rounded.Delete, null) },
-                            onClick = {
-                                menu = false
-                                onDelete(video)
-                            },
-                        )
-                    }
-                }
+                DropdownMenuItem(
+                    text = { Text("Eliminar del dispositivo") },
+                    leadingIcon = { Icon(Icons.Rounded.Delete, null) },
+                    onClick = {
+                        menu = false
+                        onDelete(video)
+                    },
+                )
             }
         }
     }
@@ -306,7 +350,7 @@ fun PermissionCard(
                 text = if (partial) {
                     "Solo vemos los vídeos que seleccionaste. Puedes añadir más o abrir un archivo concreto."
                 } else {
-                    "VidPlay necesita permiso para leer los vídeos de este dispositivo. No se sube nada a internet."
+                    "VidCofre necesita permiso para leer los vídeos de este dispositivo. Tus vídeos no se suben a internet."
                 },
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,

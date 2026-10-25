@@ -21,7 +21,7 @@ data class PlayerTrackOption(
 
 @Immutable
 data class PlayerUiState(
-    val title: String = "VidPlay",
+    val title: String = "VidCofre",
     val isPlaying: Boolean = false,
     val isBuffering: Boolean = false,
     val positionMs: Long = 0L,

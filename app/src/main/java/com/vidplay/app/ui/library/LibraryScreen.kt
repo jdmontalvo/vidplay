@@ -42,9 +42,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.vidplay.app.R
+import com.vidplay.app.VidPlayApp
 import com.vidplay.app.data.media.VideoItem
 import com.vidplay.app.data.settings.SortOrder
 import com.vidplay.app.ui.components.EmptyState
@@ -62,11 +65,14 @@ fun LibraryScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val app = context.applicationContext as VidPlayApp
+    val ads = app.container.ads
     val videos by viewModel.videos.collectAsStateWithLifecycle()
     val query by viewModel.query.collectAsStateWithLifecycle()
     val sortOrder by viewModel.sortOrder.collectAsStateWithLifecycle()
     val permissionGranted by viewModel.permissionGranted.collectAsStateWithLifecycle()
     val partialAccess by viewModel.partialAccess.collectAsStateWithLifecycle()
+    val adReady by ads.adReady.collectAsStateWithLifecycle()
 
     var searchVisible by rememberSaveable { mutableStateOf(false) }
     var sortMenu by remember { mutableStateOf(false) }
@@ -89,6 +95,26 @@ fun LibraryScreen(
     }
 
     LaunchedEffect(Unit) { viewModel.refresh() }
+
+    // Ask for a library ad only when the user is actually browsing videos.
+    LaunchedEffect(permissionGranted, videos.isEmpty()) {
+        if (permissionGranted && videos.isNotEmpty()) ads.onLibraryVisible()
+    }
+
+    val adContent: (@Composable () -> Unit)? =
+        if (adReady && permissionGranted && !searchVisible) {
+            {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 6.dp),
+                ) {
+                    ads.NativeAdCard(Modifier.fillMaxWidth())
+                }
+            }
+        } else {
+            null
+        }
 
     fun requestPermission() {
         permissionLauncher.launch(com.vidplay.app.data.media.MediaPermissions.requiredPermissions())
@@ -140,7 +166,7 @@ fun LibraryScreen(
                         modifier = Modifier.fillMaxWidth(),
                     )
                 } else {
-                    Text("VidPlay")
+                    Text(stringResource(R.string.app_name))
                 }
             },
             actions = {
@@ -262,6 +288,7 @@ fun LibraryScreen(
                     onClick = { viewModel.play(context, it) },
                     onHide = ::hideVideo,
                     onDelete = ::deleteVideo,
+                    adContent = adContent,
                 )
             }
             else -> {
@@ -270,6 +297,7 @@ fun LibraryScreen(
                     onClick = { viewModel.play(context, it) },
                     onHide = ::hideVideo,
                     onDelete = ::deleteVideo,
+                    adContent = adContent,
                 )
             }
         }

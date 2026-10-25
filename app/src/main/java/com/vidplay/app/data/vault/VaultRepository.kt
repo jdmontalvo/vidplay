@@ -224,7 +224,7 @@ class VaultRepository(
                 val values = ContentValues().apply {
                     put(MediaStore.Video.Media.DISPLAY_NAME, safeFileName(item.displayName))
                     put(MediaStore.Video.Media.MIME_TYPE, item.mimeType)
-                    put(MediaStore.Video.Media.RELATIVE_PATH, "${Environment.DIRECTORY_MOVIES}/VidPlay")
+                    put(MediaStore.Video.Media.RELATIVE_PATH, "${Environment.DIRECTORY_MOVIES}/VidCofre")
                     put(MediaStore.Video.Media.IS_PENDING, 1)
                 }
                 val uri = resolver.insert(
@@ -233,7 +233,7 @@ class VaultRepository(
                 ) ?: throw IllegalStateException("No se pudo crear el destino")
                 mediaStoreUri = uri
                 val output = resolver.openOutputStream(uri)
-                    ?: throw IllegalStateException("No se pudo escribir en Movies/VidPlay")
+                    ?: throw IllegalStateException("No se pudo escribir en Movies/VidCofre")
                 output.use { out ->
                     VaultCrypto.decrypt(source, out, key, verifyHash = true, onProgress = onProgress)
                 }
@@ -243,7 +243,7 @@ class VaultRepository(
             } else {
                 val dir = File(
                     Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES),
-                    "VidPlay",
+                    "VidCofre",
                 ).apply { mkdirs() }
                 val target = File(dir, safeFileName(item.displayName))
                 FileOutputStream(target).use { out ->

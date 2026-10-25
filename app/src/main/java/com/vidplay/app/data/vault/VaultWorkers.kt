@@ -101,7 +101,7 @@ class VaultImportWorker(
             val message = t.message ?: "No se pudo ocultar el vídeo"
             VaultTransferMonitor.failure(message)
             notifyFinished(
-                "No se pudo ocultar el vídeo. Abre VidPlay para reintentar.",
+                "No se pudo ocultar el vídeo. Abre VidCofre para reintentar.",
                 failed = true,
             )
             Result.failure(workDataOf(VaultWorkKeys.ERROR to message))
@@ -238,7 +238,7 @@ class VaultExportWorker(
                     val message = t.message ?: "No se pudo restaurar el vídeo"
                     VaultTransferMonitor.failure(message)
                     notifyFinished(
-                        "No se pudo restaurar el vídeo. Abre VidPlay para reintentar.",
+                        "No se pudo restaurar el vídeo. Abre VidCofre para reintentar.",
                         failed = true,
                     )
                     Result.failure(workDataOf(VaultWorkKeys.ERROR to message))
@@ -248,7 +248,7 @@ class VaultExportWorker(
             val message = t.message ?: "No se pudo restaurar el vídeo"
             VaultTransferMonitor.failure(message)
             notifyFinished(
-                "No se pudo restaurar el vídeo. Abre VidPlay para reintentar.",
+                "No se pudo restaurar el vídeo. Abre VidCofre para reintentar.",
                 failed = true,
             )
             Result.failure(workDataOf(VaultWorkKeys.ERROR to message))

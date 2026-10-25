@@ -18,11 +18,11 @@ docker run --rm `
     --mount $mountCache `
     -w /workspace `
     $image `
-    bash -lc "./gradlew :app:assembleDebug --no-daemon --stacktrace"
+    bash -lc "./gradlew :app:assemblePlayDebug --no-daemon --stacktrace"
 
 if ($LASTEXITCODE -ne 0) { throw "La compilación falló." }
 
-$apk = Join-Path $root "app\build\outputs\apk\debug\app-debug.apk"
+$apk = Join-Path $root "app\build\outputs\apk\play\debug\app-play-debug.apk"
 if (-not (Test-Path $apk)) { throw "No se encontró el APK: $apk" }
 
 Write-Host "APK generado: $apk"

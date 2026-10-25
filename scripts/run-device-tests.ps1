@@ -2,8 +2,8 @@ $ErrorActionPreference = "Stop"
 
 $root = Split-Path -Parent $PSScriptRoot
 $adb = if ($env:ADB) { $env:ADB } else { "C:\Android\platform-tools\adb.exe" }
-$appApk = Join-Path $root "app\build\outputs\apk\debug\app-debug.apk"
-$testApk = Join-Path $root "app\build\outputs\apk\androidTest\debug\app-debug-androidTest.apk"
+$appApk = Join-Path $root "app\build\outputs\apk\play\debug\app-play-debug.apk"
+$testApk = Join-Path $root "app\build\outputs\apk\androidTest\play\debug\app-play-debug-androidTest.apk"
 
 if (-not (Test-Path $adb)) { throw "No se encontró adb en $adb" }
 if (-not (Test-Path $appApk)) { throw "Falta el APK debug. Ejecuta build-debug.ps1" }

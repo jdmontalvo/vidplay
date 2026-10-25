@@ -57,6 +57,7 @@ class MainActivity : FragmentActivity() {
             isAppearanceLightStatusBars = false
             isAppearanceLightNavigationBars = false
         }
+        (application as VidPlayApp).container.ads.attach(this)
         setContent {
             VidPlayTheme {
                 MainScreen()

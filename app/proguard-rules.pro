@@ -4,6 +4,14 @@
 -keep class androidx.media3.** { *; }
 -dontwarn androidx.media3.**
 
+# Google Mobile Ads (Next-Gen) + UMP. The AARs ship consumer rules, but the
+# native view registration relies on reflection-like lookups, so keep the SDK
+# surface untouched in release builds.
+-keep class com.google.android.libraries.ads.mobile.sdk.** { *; }
+-keep class com.google.android.ump.** { *; }
+-dontwarn com.google.android.libraries.ads.mobile.sdk.**
+-dontwarn com.google.android.ump.**
+
 # NextLib FFmpeg renderers and JNI entry points.
 -keep class io.github.anilbeesetti.nextlib.** { *; }
 -dontwarn io.github.anilbeesetti.nextlib.**

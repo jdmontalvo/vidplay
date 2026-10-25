@@ -71,8 +71,13 @@ class PlayerActivity : FragmentActivity() {
     private var currentAspect = AspectMode.FIT
     private var orientationLocked = false
     private var savedPosition = false
+    private var baseSpeed = 1f
+    private var lastSpec: LaunchSpec? = null
+    private var restorePoint: RestorePoint? = null
+    private var externalLaunch = false
 
     private val subtitlePicker = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        externalLaunch = false
         uri?.let { attachSubtitle(it) }
     }
 
@@ -113,7 +118,10 @@ class PlayerActivity : FragmentActivity() {
         onSelectAudio = { group, track -> selectTrack(C.TRACK_TYPE_AUDIO, group, track) },
         onSelectSubtitle = { group, track -> selectTrack(C.TRACK_TYPE_TEXT, group, track) },
         onDisableSubtitles = { disableSubtitles() },
-        onLoadSubtitle = { subtitlePicker.launch(SUBTITLE_MIME_TYPES) },
+        onLoadSubtitle = {
+            externalLaunch = true
+            subtitlePicker.launch(SUBTITLE_MIME_TYPES)
+        },
         onSleepTimer = { minutes -> setSleepTimer(minutes) },
         onRetry = { retry() },
         onOpenExternal = { openExternal() },
@@ -159,22 +167,22 @@ class PlayerActivity : FragmentActivity() {
 
             override fun onBoostStart() {
                 val c = controller ?: return
-                if (!c.isPlaying) return
-                uiState.update { it.copy(boosting = true, boostSpeed = settings.boostSpeed) }
-                c.playbackParameters = PlaybackParameters(settings.boostSpeed, 1f)
+                if (!c.isPlaying || uiState.value.boosting) return
+                baseSpeed = uiState.value.speed.coerceIn(MIN_SPEED, MAX_SPEED)
+                val boost = settings.boostSpeed.coerceIn(MIN_SPEED, MAX_SPEED)
+                uiState.update { it.copy(boosting = true, boostSpeed = boost) }
+                c.playbackParameters = PlaybackParameters(boost, 1f)
             }
 
             override fun onBoostEnd() {
-                val c = controller ?: return
-                uiState.update { it.copy(boosting = false) }
-                c.playbackParameters = PlaybackParameters(uiState.value.speed.coerceAtLeast(0.25f), 1f)
+                endBoost()
             }
 
             override fun onBrightnessDelta(delta: Float) {
                 if (!settings.gestureBrightness) return
                 val attributes = window.attributes
                 val current = if (attributes.screenBrightness < 0f) 0.5f else attributes.screenBrightness
-                val next = (current + delta).coerceIn(0.05f, 1f)
+                val next = (current + delta).coerceIn(MIN_BRIGHTNESS, 1f)
                 attributes.screenBrightness = next
                 window.attributes = attributes
                 flashOverlay("Brillo ${(next * 100).toInt()}%")
@@ -199,7 +207,7 @@ class PlayerActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        hideSystemBars()
+        applySystemBars()
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         binding = ActivityPlayerBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -252,6 +260,12 @@ class PlayerActivity : FragmentActivity() {
         connectController()
     }
 
+    override fun onResume() {
+        super.onResume()
+        // Any external picker/player we launched is no longer in front.
+        externalLaunch = false
+    }
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
@@ -261,6 +275,7 @@ class PlayerActivity : FragmentActivity() {
     override fun onPause() {
         super.onPause()
         savePosition()
+        endBoost()
         if (!isInPictureInPictureMode && !settings.backgroundPlay) {
             controller?.pause()
         }
@@ -268,14 +283,20 @@ class PlayerActivity : FragmentActivity() {
 
     override fun onStop() {
         super.onStop()
+        if (isInPictureInPictureMode || isChangingConfigurations || externalLaunch) return
         // Vault content is not allowed to survive in the background notification
         // and must be unlocked again with biometrics/PIN when the player is left.
         val currentIsVault =
             controller?.currentMediaItem?.localConfiguration?.uri?.scheme == "vault"
-        if (!isInPictureInPictureMode && (uiState.value.isVault || currentIsVault)) {
-            controller?.stop()
-            controller?.clearMediaItems()
+        val wasVault = uiState.value.isVault || currentIsVault
+        if (wasVault) {
             app.container.vaultRepository.lock()
+        }
+        // With background playback disabled the media session must not survive the
+        // player. Leaving with Back closes it; going Home keeps a paused snapshot so
+        // the same video can be reloaded in place when the player comes back.
+        if (wasVault || !settings.backgroundPlay) {
+            shutDownPlayback(keepSnapshot = !wasVault && !isFinishing)
         }
     }
 
@@ -298,7 +319,7 @@ class PlayerActivity : FragmentActivity() {
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
-        if (hasFocus) hideSystemBars()
+        if (hasFocus) applySystemBars()
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -335,7 +356,11 @@ class PlayerActivity : FragmentActivity() {
         val future = MediaController.Builder(this, token).buildAsync()
         controllerFuture = future
         future.addListener({
-            if (isDestroyed) {
+            if (isDestroyed || isFinishing) {
+                MediaController.releaseFuture(future)
+                return@addListener
+            }
+            if (controller != null) {
                 MediaController.releaseFuture(future)
                 return@addListener
             }
@@ -343,6 +368,7 @@ class PlayerActivity : FragmentActivity() {
                 val c = future.get()
                 controller = c
                 binding.playerView.player = c
+                baseSpeed = c.playbackParameters.speed.coerceIn(MIN_SPEED, MAX_SPEED)
                 attachPlayerListener(c)
                 updateState(c)
                 applyLaunchSpec()
@@ -435,6 +461,8 @@ class PlayerActivity : FragmentActivity() {
             }
         }
         pendingLaunch = spec
+        lastSpec = spec
+        restorePoint = null
         titleMap = spec.uris.mapIndexed { index, uri ->
             uri.toString() to spec.titles.getOrElse(index) { "Vídeo" }
         }.toMap().toMutableMap()
@@ -442,9 +470,38 @@ class PlayerActivity : FragmentActivity() {
     }
 
     private fun applyLaunchSpec() {
-        val spec = pendingLaunch ?: return
-        val c = controller ?: return
+        val spec = pendingLaunch
+        if (spec == null) {
+            restoreIfNeeded()
+            return
+        }
         pendingLaunch = null
+        loadSpec(
+            spec = spec,
+            startIndex = spec.startIndex,
+            startPosition = spec.startPosition,
+            autoPlay = true,
+        )
+    }
+
+    private fun restoreIfNeeded() {
+        val point = restorePoint ?: return
+        restorePoint = null
+        loadSpec(
+            spec = point.spec,
+            startIndex = point.index,
+            startPosition = point.position,
+            autoPlay = false,
+        )
+    }
+
+    private fun loadSpec(
+        spec: LaunchSpec,
+        startIndex: Int,
+        startPosition: Long,
+        autoPlay: Boolean,
+    ) {
+        val c = controller ?: return
         if (spec.uris.any { it.scheme == "vault" }) {
             window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
         }
@@ -474,17 +531,21 @@ class PlayerActivity : FragmentActivity() {
                     )
                     .build()
             }
-            var start = spec.startPosition
-            if (start <= 0L && settings.autoResume) {
-                start = loadResumePosition(spec.uris[spec.startIndex])
+            if (items.isEmpty()) return@launch
+            val index = startIndex.coerceIn(0, items.lastIndex)
+            var start = startPosition
+            if (start <= 0L && autoPlay && settings.autoResume) {
+                start = loadResumePosition(spec.uris[index])
             }
-            c.setMediaItems(items, spec.startIndex, start.coerceAtLeast(0L))
+            c.setMediaItems(items, index, start.coerceAtLeast(0L))
             c.prepare()
-            c.play()
+            if (autoPlay) {
+                c.play()
+            }
             uiState.update {
                 it.copy(
-                    title = spec.titles.getOrElse(spec.startIndex) { "VidPlay" },
-                    isVault = spec.uris[spec.startIndex].scheme == "vault",
+                    title = spec.titles.getOrElse(index) { "VidCofre" },
+                    isVault = spec.uris[index].scheme == "vault",
                     controlsVisible = true,
                 )
             }
@@ -509,7 +570,7 @@ class PlayerActivity : FragmentActivity() {
         val uri = current?.localConfiguration?.uri
         val realTitle = uri?.let { titleMap[it.toString()] }
             ?: current?.mediaMetadata?.title?.toString()
-            ?: "VidPlay"
+            ?: "VidCofre"
         val duration = player.duration.takeIf { it != C.TIME_UNSET }?.coerceAtLeast(0L) ?: 0L
         val audio = buildTrackOptions(player.currentTracks, C.TRACK_TYPE_AUDIO)
         val subtitles = buildTrackOptions(player.currentTracks, C.TRACK_TYPE_TEXT)
@@ -519,6 +580,10 @@ class PlayerActivity : FragmentActivity() {
         } else {
             window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
         }
+        val currentSpeed = player.playbackParameters.speed
+        if (!uiState.value.boosting) {
+            baseSpeed = currentSpeed.coerceIn(MIN_SPEED, MAX_SPEED)
+        }
         uiState.update {
             it.copy(
                 title = realTitle,
@@ -527,7 +592,7 @@ class PlayerActivity : FragmentActivity() {
                 positionMs = player.currentPosition.coerceAtLeast(0L),
                 durationMs = duration,
                 bufferedMs = player.bufferedPosition.coerceAtLeast(0L),
-                speed = player.playbackParameters.speed,
+                speed = if (it.boosting) baseSpeed else currentSpeed,
                 audioTracks = audio,
                 subtitleTracks = subtitles,
                 subtitlesEnabled = subtitles.any { track -> track.selected },
@@ -651,9 +716,53 @@ class PlayerActivity : FragmentActivity() {
     }
 
     private fun setSpeed(speed: Float) {
-        controller?.playbackParameters = PlaybackParameters(speed.coerceIn(0.25f, 4f), 1f)
-        uiState.update { it.copy(speed = speed) }
-        flashOverlay(formatSpeed(speed))
+        val clamped = speed.coerceIn(MIN_SPEED, MAX_SPEED)
+        baseSpeed = clamped
+        uiState.update { it.copy(speed = clamped, boosting = false) }
+        controller?.playbackParameters = PlaybackParameters(clamped, 1f)
+        flashOverlay(formatSpeed(clamped))
+    }
+
+    /** Restores the speed chosen by the user after a long-press boost. */
+    private fun endBoost() {
+        if (!uiState.value.boosting) return
+        uiState.update { it.copy(boosting = false) }
+        controller?.playbackParameters = PlaybackParameters(baseSpeed, 1f)
+    }
+
+    /**
+     * Stops playback and tears down the media session so that nothing keeps
+     * running (or shows a notification) after the player is left.
+     */
+    private fun shutDownPlayback(keepSnapshot: Boolean) {
+        endBoost()
+        val c = controller
+        if (c != null) {
+            val spec = lastSpec
+            if (keepSnapshot && spec != null) {
+                restorePoint = RestorePoint(
+                    spec = spec,
+                    index = c.currentMediaItemIndex.coerceAtLeast(0),
+                    position = c.currentPosition.coerceAtLeast(0L),
+                )
+            } else {
+                restorePoint = null
+            }
+            binding.playerView.player = null
+            playerListener?.let { listener -> c.removeListener(listener) }
+            playerListener = null
+            c.stop()
+            c.clearMediaItems()
+            c.release()
+            controller = null
+            controllerFuture = null
+        } else {
+            restorePoint = null
+            controllerFuture?.let { if (!it.isDone) MediaController.releaseFuture(it) }
+            controllerFuture = null
+        }
+        runCatching { stopService(Intent(this, PlaybackService::class.java)) }
+        uiState.update { it.copy(isPlaying = false, boosting = false, controlsVisible = true) }
     }
 
     private fun setAspect(mode: AspectMode) {
@@ -767,8 +876,10 @@ class PlayerActivity : FragmentActivity() {
             .setDataAndType(uri, mime)
             .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         try {
+            externalLaunch = true
             startActivity(Intent.createChooser(intent, "Abrir con"))
         } catch (_: Exception) {
+            externalLaunch = false
             toast("No hay otra app para reproducir este vídeo")
         }
     }
@@ -885,9 +996,12 @@ class PlayerActivity : FragmentActivity() {
         }
     }
 
-    private fun hideSystemBars() {
+    private fun applySystemBars() {
         WindowCompat.getInsetsController(window, window.decorView).apply {
-            hide(WindowInsetsCompat.Type.systemBars())
+            // Keep the video immersive, but leave the Android navigation bar
+            // (Back / Home / Recents) permanently available.
+            hide(WindowInsetsCompat.Type.statusBars())
+            show(WindowInsetsCompat.Type.navigationBars())
             systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
     }
@@ -927,7 +1041,17 @@ class PlayerActivity : FragmentActivity() {
         val startPosition: Long,
     )
 
+    private data class RestorePoint(
+        val spec: LaunchSpec,
+        val index: Int,
+        val position: Long,
+    )
+
     companion object {
+        private const val MIN_SPEED = 0.25f
+        private const val MAX_SPEED = 4f
+        private const val MIN_BRIGHTNESS = 0.01f
+
         const val EXTRA_URIS = "com.vidplay.app.extra.URIS"
         const val EXTRA_TITLES = "com.vidplay.app.extra.TITLES"
         const val EXTRA_MIME_TYPES = "com.vidplay.app.extra.MIME_TYPES"

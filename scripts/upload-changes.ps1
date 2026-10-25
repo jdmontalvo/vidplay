@@ -60,6 +60,8 @@ $forbidden = @($staged | Where-Object {
     $_ -match '\.(wav|pcm|apk|aab|mp4|mkv|webm|avi|mov|flv|m2ts|vpv|vpt)$' -or
     $_ -match '(^|/)local\.properties$' -or
     $_ -match '(^|/)keystore\.properties$' -or
+    $_ -match '(^|/)ads\.properties$' -or
+    $_ -match '^personal/' -or
     ($_ -match '\.jks$' -and $_ -notmatch '^keystore/vidplay-debug\.jks$')
 })
 

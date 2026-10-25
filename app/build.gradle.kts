@@ -14,6 +14,21 @@ val keystoreProperties = Properties().apply {
     }
 }
 
+// AdMob ids live outside Git. Without this file the release build disables ads
+// instead of silently serving test ads.
+val adsPropertiesFile = rootProject.file("ads.properties")
+val adsProperties = Properties().apply {
+    if (adsPropertiesFile.exists()) {
+        adsPropertiesFile.inputStream().use { load(it) }
+    }
+}
+
+val testAdMobAppId = "ca-app-pub-3940256099942544~3347511713"
+val testNativeUnitId = "ca-app-pub-3940256099942544/2247696110"
+val releaseAdMobAppId = adsProperties.getProperty("admobAppId").orEmpty()
+val releaseNativeUnitId = adsProperties.getProperty("nativeUnitId").orEmpty()
+val adsConfigured = releaseAdMobAppId.isNotBlank() && releaseNativeUnitId.isNotBlank()
+
 android {
     namespace = "com.vidplay.app"
     compileSdk = 36
@@ -22,8 +37,8 @@ android {
         applicationId = "com.vidplay.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -32,6 +47,30 @@ android {
 
         ndk {
             abiFilters += listOf("arm64-v8a", "armeabi-v7a")
+        }
+
+        // Test ids by default. Release overrides these with ads.properties.
+        buildConfigField("boolean", "ADS_CONFIGURED", "false")
+        buildConfigField("String", "ADMOB_APP_ID", "\"$testAdMobAppId\"")
+        buildConfigField("String", "ADMOB_NATIVE_UNIT_ID", "\"$testNativeUnitId\"")
+        manifestPlaceholders["admobAppId"] = testAdMobAppId
+    }
+
+    flavorDimensions += "dist"
+
+    productFlavors {
+        create("play") {
+            dimension = "dist"
+            buildConfigField("boolean", "ADS_ENABLED", "true")
+            // Google Play build: ads enabled, package kept as com.vidplay.app.
+        }
+        create("foss") {
+            dimension = "dist"
+            // Personal build: no ads, no INTERNET permission and a separate
+            // package so both versions can coexist on the same device.
+            applicationIdSuffix = ".personal"
+            versionNameSuffix = "-personal"
+            buildConfigField("boolean", "ADS_ENABLED", "false")
         }
     }
 
@@ -56,10 +95,24 @@ android {
         debug {
             isMinifyEnabled = false
             signingConfig = signingConfigs.getByName("fixedDebug")
+            // Debug always uses Google's test ids so nobody clicks live ads.
+            buildConfigField("boolean", "ADS_CONFIGURED", "true")
         }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
+            buildConfigField("boolean", "ADS_CONFIGURED", adsConfigured.toString())
+            buildConfigField(
+                "String",
+                "ADMOB_APP_ID",
+                "\"${releaseAdMobAppId.ifBlank { testAdMobAppId }}\"",
+            )
+            buildConfigField(
+                "String",
+                "ADMOB_NATIVE_UNIT_ID",
+                "\"${releaseNativeUnitId.ifBlank { testNativeUnitId }}\"",
+            )
+            manifestPlaceholders["admobAppId"] = releaseAdMobAppId.ifBlank { testAdMobAppId }
             signingConfig = if (keystorePropertiesFile.exists()) {
                 signingConfigs.getByName("release")
             } else {
@@ -152,6 +205,10 @@ dependencies {
     implementation("androidx.work:work-runtime-ktx:2.12.0")
     implementation("androidx.biometric:biometric:1.4.0-alpha07")
     implementation("androidx.documentfile:documentfile:1.1.0")
+
+    // Ads only in the Play build. The personal (foss) build never links the SDK.
+    add("playImplementation", "com.google.android.libraries.ads.mobile.sdk:ads-mobile-sdk:1.6.0")
+    add("playImplementation", "com.google.android.ump:user-messaging-platform:4.0.0")
 
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
 

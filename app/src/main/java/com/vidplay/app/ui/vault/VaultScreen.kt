@@ -413,7 +413,7 @@ fun VaultScreen(
                 TextButton(onClick = {
                     viewModel.restore(item, null)
                     restoreItem = null
-                }) { Text("Guardar en Movies/VidPlay") }
+                }) { Text("Guardar en Movies/VidCofre") }
             },
             dismissButton = {
                 Row {
@@ -463,7 +463,7 @@ private fun VaultSetup(onConfigure: () -> Unit) {
         Text("Protege tus vídeos", style = MaterialTheme.typography.headlineSmall)
         Spacer(Modifier.height(10.dp))
         Text(
-            "VidPlay cifra los vídeos con AES-256-GCM y los guarda en el almacenamiento privado de la app. " +
+            "VidCofre cifra los vídeos con AES-256-GCM y los guarda en el almacenamiento privado de la app. " +
                 "Desaparecen de la galería y del explorador de archivos.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,

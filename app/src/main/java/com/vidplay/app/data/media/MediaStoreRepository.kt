@@ -272,7 +272,7 @@ class MediaStoreRepository(private val context: Context) {
         val values = ContentValues().apply {
             put(MediaStore.Video.Media.DISPLAY_NAME, name)
             put(MediaStore.Video.Media.MIME_TYPE, "video/mp4")
-            put(MediaStore.Video.Media.RELATIVE_PATH, "${Environment.DIRECTORY_MOVIES}/VidPlay")
+            put(MediaStore.Video.Media.RELATIVE_PATH, "${Environment.DIRECTORY_MOVIES}/VidCofre")
             put(MediaStore.Video.Media.IS_PENDING, 1)
         }
         return try {
@@ -302,5 +302,5 @@ class MediaStoreRepository(private val context: Context) {
     }
 
     fun legacyMoviesDir(): File =
-        File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES), "VidPlay")
+        File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES), "VidCofre")
 }

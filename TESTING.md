@@ -1,4 +1,4 @@
-# Guía de pruebas — VidPlay
+# Guía de pruebas — VidCofre
 
 ## Compilar e instalar
 
@@ -18,7 +18,7 @@ docker run --rm `
   --mount type=bind,source="$PWD",target=/workspace `
   --mount type=volume,source=vidplay-gradle-cache,target=/gradle-cache `
   -w /workspace vidplay-android-build:latest `
-  bash -lc "./gradlew :app:assembleDebugAndroidTest"
+  bash -lc "./gradlew :app:assemblePlayDebugAndroidTest"
 
 .\scripts\run-device-tests.ps1
 ```
@@ -98,7 +98,7 @@ Debe mostrar `.dek`, `.pin` y archivos `<uuid>.vpv` / `<uuid>.vpt`. Los `.vpv` n
 - [ ] El original desaparece de la galería/explorador; si no se puede borrar, aparece el aviso de pendiente.
 - [ ] Confirmar el borrado del original desde el diálogo del sistema.
 - [ ] Reproducir desde el baúl, hacer seek y comprobar que no hay texto plano en `filesDir`.
-- [ ] Restaurar en `Movies/VidPlay` y verlo en la galería.
+- [ ] Restaurar en `Movies/VidCofre` y verlo en la galería.
 - [ ] Restaurar con “Elegir ubicación” (SAF).
 - [ ] Eliminar un vídeo del baúl.
 - [ ] Cancelar una importación y verificar que no queda un `.part`.
@@ -130,17 +130,36 @@ ffmpeg -i input.mp4 -c copy sample.ts
 - [ ] 4K/HDR y PiP.
 - [ ] archivo no soportado: error claro.
 
+### Publicidad (solo flavor `play`)
+
+El debug usa los IDs de prueba de Google: nunca hay ingresos ni riesgo de clic inválido.
+
+- [ ] Con permiso de vídeo y al menos un vídeo, abrir la biblioteca: el formulario de consentimiento UMP aparece si es la primera vez.
+- [ ] Aceptar o rechazar; en ambos casos la app sigue funcionando.
+- [ ] La tarjeta "Patrocinado" aparece tras el sexto vídeo, nunca como primera tarjeta.
+- [ ] El icono de AdChoices del SDK está visible y "Ocultar anuncio" la retira durante la sesión.
+- [ ] Cerrar y reabrir la biblioteca antes de una hora: no se carga otro anuncio.
+- [ ] Cambiar la fecha del dispositivo o borrar `vidplay_ads` para probar el tope diario de 4.
+- [ ] Sin conexión: no aparece hueco, error ni bloqueo.
+- [ ] En el reproductor, el baúl, Carpetas y Ajustes no hay ninguna petición ni tarjeta.
+- [ ] `Ajustes → Opciones de privacidad` reabre el formulario de consentimiento.
+- [ ] En el flavor `foss` no existe la sección de anuncios y el APK no declara `INTERNET`.
+
+Comprobación de tráfico (opcional): con la app en el reproductor o en el baúl, un proxy no debe ver peticiones a dominios de anuncios.
+
 ### Release
 
 ```powershell
 .\scripts\build-release.ps1
 .\scripts\build-release.ps1 -Apk
+.\scripts\build-personal.ps1
 ```
 
-- [ ] Instalar `app-release.apk` en un dispositivo limpio (desinstalar debug antes).
-- [ ] Verificar que el AAB está firmado y que R8 no rompe workers ni JNI.
-- [ ] `zipalign -c -P 16 -v 4 app-release.apk`.
+- [ ] Instalar `app-play-release.apk` en un dispositivo limpio (desinstalar debug antes).
+- [ ] Verificar que el AAB está firmado y que R8 no rompe workers, JNI ni el SDK de anuncios.
+- [ ] `zipalign -c -P 16 -v 4 app-play-release.apk`.
 - [ ] Probar la app release con un archivo del baúl.
+- [ ] Verificar que `VidCofre-personal-*.apk` no pide `INTERNET` y que no muestra anuncios.
 - [ ] Subir el AAB a Internal testing.
 
 ## Comandos útiles

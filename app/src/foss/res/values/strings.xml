@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The personal (foss) build installs side by side with the Play version. -->
+    <string name="app_name">VidCofre Personal</string>
+</resources>

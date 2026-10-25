@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">VidPlay</string>
+    <string name="app_name">VidCofre</string>
     <string name="notification_channel_playback">Reproducción</string>
     <string name="notification_channel_transfer">Baúl en proceso</string>
     <string name="notification_channel_general">Avisos</string>

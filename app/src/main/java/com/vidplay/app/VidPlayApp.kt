@@ -12,6 +12,8 @@ import coil3.SingletonImageLoader
 import coil3.request.crossfade
 import coil3.video.VideoFrameDecoder
 import com.vidplay.app.data.db.AppDatabase
+import com.vidplay.app.ads.AdsController
+import com.vidplay.app.ads.AdsProvider
 import com.vidplay.app.data.media.MediaStoreRepository
 import com.vidplay.app.data.settings.SettingsRepository
 import com.vidplay.app.data.vault.VaultRepository
@@ -36,10 +38,16 @@ class AppContainer(context: Context) {
     val settingsRepository = SettingsRepository(context)
     val mediaStoreRepository = MediaStoreRepository(context)
     val vaultRepository = VaultRepository(context, database, settingsRepository)
+    val ads: AdsController = AdsProvider.create(context)
 }
 
 class VidPlayApp : Application(), SingletonImageLoader.Factory {
     lateinit var container: AppContainer
+        private set
+
+    /** Latest background-playback preference, readable synchronously by the service. */
+    @Volatile
+    var backgroundPlay: Boolean = true
         private set
 
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -54,6 +62,7 @@ class VidPlayApp : Application(), SingletonImageLoader.Factory {
         appScope.launch {
             container.settingsRepository.settings.collect { settings ->
                 autoLockSeconds = settings.vaultAutoLockSeconds
+                backgroundPlay = settings.backgroundPlay
             }
         }
 

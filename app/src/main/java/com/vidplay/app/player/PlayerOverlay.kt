@@ -12,9 +12,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -128,6 +131,19 @@ fun PlayerOverlay(
     }
 
     Box(modifier = modifier.fillMaxSize()) {
+        val navigationBarHeight = WindowInsets.navigationBars
+            .asPaddingValues()
+            .calculateBottomPadding()
+        if (navigationBarHeight > 0.dp) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .height(navigationBarHeight)
+                    .background(Color.Black.copy(alpha = 0.45f)),
+            )
+        }
+
         if (state.isBuffering) {
             CircularProgressIndicator(
                 modifier = Modifier.align(Alignment.Center).size(48.dp),

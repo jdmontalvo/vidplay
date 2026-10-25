@@ -20,7 +20,7 @@ if ($LASTEXITCODE -ne 0) {
 
 $mountProject = "type=bind,source=$root,target=/workspace"
 $mountCache = "type=volume,source=vidplay-gradle-cache,target=/gradle-cache"
-$task = if ($Apk) { ":app:assembleRelease" } else { ":app:bundleRelease" }
+$task = if ($Apk) { ":app:assemblePlayRelease" } else { ":app:bundlePlayRelease" }
 
 docker run --rm `
     --mount $mountProject `
@@ -32,9 +32,15 @@ docker run --rm `
 if ($LASTEXITCODE -ne 0) { throw "La compilación release falló." }
 
 if ($Apk) {
-    $artifact = Join-Path $root "app\build\outputs\apk\release\app-release.apk"
+    $artifact = Join-Path $root "app\build\outputs\apk\play\release\app-play-release.apk"
 } else {
-    $artifact = Join-Path $root "app\build\outputs\bundle\release\app-release.aab"
+    $artifact = Join-Path $root "app\build\outputs\bundle\playRelease\app-play-release.aab"
 }
 if (-not (Test-Path $artifact)) { throw "No se encontró el artefacto: $artifact" }
 Write-Host "Artefacto release generado: $artifact"
+
+if (-not (Test-Path (Join-Path $root "ads.properties"))) {
+    Write-Host ""
+    Write-Host "AVISO: falta ads.properties. Este AAB compila con los anuncios DESACTIVADOS." -ForegroundColor Yellow
+    Write-Host "Copia ads.properties.example a ads.properties, rellena tus IDs de AdMob y vuelve a compilar." -ForegroundColor Yellow
+}
