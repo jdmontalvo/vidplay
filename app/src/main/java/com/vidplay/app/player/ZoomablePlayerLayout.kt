@@ -84,7 +84,8 @@ class ZoomablePlayerLayout @JvmOverloads constructor(
         }
 
         override fun onLongPress(e: MotionEvent) {
-            if (scale > 1.01f) return
+            // Long-press boost works at any zoom level. Panning still wins when the
+            // finger moves beyond touch slop before the long-press timeout.
             boosting = true
             mode = DragMode.NONE
             dragging = false
@@ -158,6 +159,11 @@ class ZoomablePlayerLayout @JvmOverloads constructor(
             }
 
             MotionEvent.ACTION_POINTER_DOWN -> {
+                // A second finger starts a pinch: don't keep playback boosted.
+                if (boosting) {
+                    boosting = false
+                    listener?.onBoostEnd()
+                }
                 mode = DragMode.NONE
                 dragging = false
             }
