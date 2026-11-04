@@ -22,8 +22,8 @@
 -dontwarn androidx.room.paging.**
 
 # WorkManager workers are instantiated by reflection.
--keep class com.vidplay.app.data.vault.VaultImportWorker { <init>(...); }
--keep class com.vidplay.app.data.vault.VaultExportWorker { <init>(...); }
+-keep class com.jdmontalvo.vidcofre.data.vault.VaultImportWorker { <init>(...); }
+-keep class com.jdmontalvo.vidcofre.data.vault.VaultExportWorker { <init>(...); }
 
 # Kotlin metadata used by reflection in a few libraries.
 -keepattributes *Annotation*, InnerClasses, Signature, Exceptions

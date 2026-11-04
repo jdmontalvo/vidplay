@@ -20,7 +20,7 @@ Nativa:  ca-app-pub-3940256099942544/2247696110
 ## 1. AdMob (una vez)
 
 1. Cuenta y perfil de pagos completos.
-2. App **VidCofre** con paquete `com.vidplay.app` (aunque no esté publicada).
+2. App **VidCofre** con paquete `com.jdmontalvo.vidcofre` (aunque no esté publicada).
 3. Unidad **Nativa** → copiar App ID y unidad.
 4. **Privacidad y mensajería**: mensaje EEE/UK/Suiza publicado + mensaje estados EE. UU.
 5. Unidad → avanzado: **1 impresión/hora**, clasificación **G/PG**, categorías sensibles bloqueadas.
@@ -49,7 +49,7 @@ El script avisa si detecta IDs de prueba, `adTestMode` o una posición de anunci
 
 ## 3. Play Console
 
-1. **Crear app**: VidCofre, `com.vidplay.app`, es-ES, gratis, app, no juego.
+1. **Crear app**: VidCofre, `com.jdmontalvo.vidcofre`, es-ES, gratis, app, no juego.
 2. **Internal testing** → subir el AAB → añadir tu correo como tester → instalar desde el enlace de Play en un dispositivo limpio.
 3. **App content** (respuestas en `PLAYSTORE.md`):
    - Política de privacidad: `https://jdmontalvo.github.io/vidplay/privacy.html`.

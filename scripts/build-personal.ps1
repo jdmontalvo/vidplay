@@ -54,5 +54,5 @@ Copy-Item $apk $target -Force
 
 Write-Host ""
 Write-Host "APK personal sin anuncios: $target"
-Write-Host "Paquete: com.vidplay.app.personal (instalacion independiente, sin INTERNET)."
+Write-Host "Paquete: com.jdmontalvo.vidcofre.personal (instalacion independiente, sin INTERNET)."
 Write-Host "Esta carpeta (personal\) esta en .gitignore: no se sube al repositorio."

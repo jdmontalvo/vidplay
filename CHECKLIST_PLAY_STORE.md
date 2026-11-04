@@ -1,6 +1,6 @@
 # Checklist de publicación en Play Store — VidCofre
 
-Paquete: `com.vidplay.app`
+Paquete: `com.jdmontalvo.vidcofre`
 Versión: `1.1.0` (`versionCode 2`)
 Licencia: GPL-3.0, repositorio público: <https://github.com/jdmontalvo/vidplay>
 Anuncios: sí (nativo, máximo 1/hora y 4/día)
@@ -18,7 +18,7 @@ La cuenta anterior está cerrada por inactividad. Hay que crear una **cuenta nue
 
 - [ ] Crear la cuenta de AdMob con la misma cuenta de Google.
 - [ ] Completar perfil de pagos, datos fiscales y verificación por PIN.
-- [ ] Registrar la app **VidCofre** con el paquete `com.vidplay.app`.
+- [ ] Registrar la app **VidCofre** con el paquete `com.jdmontalvo.vidcofre`.
 - [ ] Crear una unidad **Native**.
 - [ ] Configurar **Privacy & messaging** (UMP): mensaje EEE/UK/Suiza y mensaje para estados de EE. UU.
 - [ ] Limitar la clasificación máxima de anuncios a **G/PG** y bloquear categorías sensibles.
@@ -50,7 +50,7 @@ Salida: `app\build\outputs\bundle\playRelease\app-play-release.aab`.
 
 ## 4. Play Console
 
-- [ ] Crear la app con el nombre **VidCofre** y el paquete `com.vidplay.app`.
+- [ ] Crear la app con el nombre **VidCofre** y el paquete `com.jdmontalvo.vidcofre`.
 - [ ] Categoría: Video players & editors.
 - [ ] Subir el AAB a **Internal testing** y probar en un dispositivo limpio.
 - [ ] Publicar `docs/` con GitHub Pages y usar `privacy.html` como política.

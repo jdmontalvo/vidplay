@@ -6,8 +6,8 @@ Guía de continuación del proyecto. Léela completa antes de cambiar código.
 
 **VidCofre** es un reproductor de vídeo local para Android con un baúl cifrado y un anuncio nativo discreto en la biblioteca.
 
-- Nombre visible: VidCofre (el repo y el paquete siguen siendo `vidplay` / `com.vidplay.app`)
-- Application ID: `com.vidplay.app` (Play) · `com.vidplay.app.personal` (build personal)
+- Nombre visible: VidCofre. Repo: `vidplay`. Paquete de Play: `com.jdmontalvo.vidcofre` (el antiguo `com.vidplay.app` está reservado).
+- Application ID: `com.jdmontalvo.vidcofre` (Play) · `com.jdmontalvo.vidcofre.personal` (build personal)
 - Versión: `1.1.0` (`versionCode 2`)
 - Repositorio: <https://github.com/jdmontalvo/vidplay> (público, GPL-3.0)
 - SDK: compile/target 36, min 26
@@ -17,8 +17,8 @@ Guía de continuación del proyecto. Léela completa antes de cambiar código.
 
 | Flavor | Paquete | Anuncios | INTERNET | Uso |
 |---|---|---|---|---|
-| `play` | `com.vidplay.app` | Sí (AdMob nativo) | Sí | Google Play |
-| `foss` | `com.vidplay.app.personal` | No (SDK no enlazado) | No | Uso personal / recompilar sin ads |
+| `play` | `com.jdmontalvo.vidcofre` | Sí (AdMob nativo) | Sí | Google Play |
+| `foss` | `com.jdmontalvo.vidcofre.personal` | No (SDK no enlazado) | No | Uso personal / recompilar sin ads |
 
 El código compartido está en `app/src/main`. Cada flavor aporta su `AdsProvider`:
 

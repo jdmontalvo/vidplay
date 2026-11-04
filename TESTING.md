@@ -34,7 +34,7 @@ Solo funcionan en builds debug (`BuildConfig.DEBUG`). Sirven para preparar el ba
 Sustituye `<ID>` por un `_id` de `content://media/external/video/media`.
 
 ```powershell
-adb shell am start -n com.vidplay.app/.MainActivity `
+adb shell am start -n com.jdmontalvo.vidcofre/.MainActivity `
   -d content://media/external/video/media/<ID> `
   --grant-read-uri-permission `
   --es debug_vault_pin 12345678 `
@@ -48,7 +48,7 @@ adb shell am start -n com.vidplay.app/.MainActivity `
 ### Reproducir el último vídeo del baúl
 
 ```powershell
-adb shell am start -n com.vidplay.app/.MainActivity `
+adb shell am start -n com.jdmontalvo.vidcofre/.MainActivity `
   --es debug_vault_pin 12345678 `
   --ez debug_play_latest_vault true
 ```
@@ -56,7 +56,7 @@ adb shell am start -n com.vidplay.app/.MainActivity `
 ### Inspeccionar el almacenamiento del baúl
 
 ```powershell
-adb shell run-as com.vidplay.app ls -la files/vault
+adb shell run-as com.jdmontalvo.vidcofre ls -la files/vault
 ```
 
 Debe mostrar `.dek`, `.pin` y archivos `<uuid>.vpv` / `<uuid>.vpt`. Los `.vpv` no deben ser reproducibles por la galería ni por un explorador normal.
@@ -179,8 +179,8 @@ Comprobación de tráfico (opcional): con la app en el reproductor o en el baúl
 
 ```powershell
 .\scripts\logcat.ps1
-adb shell run-as com.vidplay.app ls -la files/vault
-adb shell run-as com.vidplay.app ls -la databases
+adb shell run-as com.jdmontalvo.vidcofre ls -la files/vault
+adb shell run-as com.jdmontalvo.vidcofre ls -la databases
 adb shell dumpsys media_session | Select-String com.vidplay
 ```
 

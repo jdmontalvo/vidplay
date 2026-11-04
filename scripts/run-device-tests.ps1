@@ -23,8 +23,8 @@ if ($LASTEXITCODE -ne 0) { throw "No se pudo instalar el APK debug." }
 if ($LASTEXITCODE -ne 0) { throw "No se pudo instalar el APK de tests." }
 
 & $adb shell am instrument -w -r `
-    -e class com.vidplay.app.VaultKeyManagerTest `
-    com.vidplay.app.test/androidx.test.runner.AndroidJUnitRunner
+    -e class com.jdmontalvo.vidcofre.VaultKeyManagerTest `
+    com.jdmontalvo.vidcofre.test/androidx.test.runner.AndroidJUnitRunner
 
 if ($LASTEXITCODE -ne 0) { throw "Los tests instrumentados fallaron." }
 Write-Host "Tests instrumentados completados."

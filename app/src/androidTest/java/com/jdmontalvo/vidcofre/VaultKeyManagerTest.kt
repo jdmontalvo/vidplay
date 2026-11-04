@@ -1,0 +1,45 @@
+package com.jdmontalvo.vidcofre
+
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import com.jdmontalvo.vidcofre.data.vault.VaultCrypto
+import com.jdmontalvo.vidcofre.data.vault.VaultKeyManager
+import org.junit.Assert.assertArrayEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Test
+import org.junit.runner.RunWith
+import java.io.File
+import java.util.UUID
+
+@RunWith(AndroidJUnit4::class)
+class VaultKeyManagerTest {
+
+    @Test
+    fun keystoreAndPinCanUnwrapTheSameDek() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val testId = UUID.randomUUID().toString()
+        val dir = File(context.filesDir, "vault-key-test-$testId")
+        dir.mkdirs()
+        val manager = VaultKeyManager(dir, "vidplay_vault_test_$testId")
+        val dek = VaultCrypto.randomKey()
+        try {
+            manager.create(dek, "test-pin-1234")
+            assertTrue(manager.hasVault())
+
+            val fromKeystore = manager.unwrapWithKeystore()
+            assertNotNull(fromKeystore)
+            assertArrayEquals(dek.encoded, fromKeystore!!.encoded)
+
+            val fromPin = manager.unwrapWithPin("test-pin-1234")
+            assertNotNull(fromPin)
+            assertArrayEquals(dek.encoded, fromPin!!.encoded)
+
+            assertNull(manager.unwrapWithPin("wrong-pin-1234"))
+        } finally {
+            manager.deleteKeys()
+            dir.deleteRecursively()
+        }
+    }
+}

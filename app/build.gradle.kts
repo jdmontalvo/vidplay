@@ -1,4 +1,4 @@
-﻿import java.util.Properties
+import java.util.Properties
 
 plugins {
     id("com.android.application")
@@ -38,11 +38,11 @@ val adTestMode = adsProperties.getProperty("adTestMode")?.toBoolean() ?: false
 val versionCodeOverride = (project.findProperty("versionCode") as String?)?.toIntOrNull()
 
 android {
-    namespace = "com.vidplay.app"
+    namespace = "com.jdmontalvo.vidcofre"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.vidplay.app"
+        applicationId = "com.jdmontalvo.vidcofre"
         minSdk = 26
         targetSdk = 36
         versionCode = versionCodeOverride ?: 2
@@ -72,7 +72,7 @@ android {
         create("play") {
             dimension = "dist"
             buildConfigField("boolean", "ADS_ENABLED", "true")
-            // Google Play build: ads enabled, package kept as com.vidplay.app.
+            // Google Play build: ads enabled, package kept as com.jdmontalvo.vidcofre.
         }
         create("foss") {
             dimension = "dist"

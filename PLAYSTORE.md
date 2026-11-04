@@ -5,7 +5,7 @@
 | Campo | Valor |
 |---|---|
 | Nombre (máx. 30) | `VidCofre — vídeos y baúl` |
-| Paquete | `com.vidplay.app` |
+| Paquete | `com.jdmontalvo.vidcofre` |
 | Categoría | Video players & editors |
 | Etiquetas | video player, offline, privacidad, reproductor |
 | Precio | Gratis (con anuncios) |
@@ -134,7 +134,7 @@ google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0
 - En closed testing se compila con **IDs de prueba** de AdMob; los testers no deben pulsar anuncios reales.
 - El anuncio aparece solo en la pestaña "Vídeos", después de seis vídeos, con etiqueta "Patrocinado" y opción "Ocultar anuncio".
 - No hay anuncios en el reproductor, el baúl, Carpetas ni Ajustes.
-- La versión personal (`com.vidplay.app.personal`) no se publica y no debe subirse a Play.
+- La versión personal (`com.jdmontalvo.vidcofre.personal`) no se publica y no debe subirse a Play.
 
 ## Riesgos de revisión
 

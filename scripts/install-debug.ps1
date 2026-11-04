@@ -10,7 +10,7 @@ if (-not (Test-Path $apk)) { throw "No se encontró el APK en $apk. Ejecuta prim
 & $adb install -r $apk
 if ($LASTEXITCODE -ne 0) { throw "adb install falló." }
 
-& $adb shell am start -n com.vidplay.app/.MainActivity
+& $adb shell am start -n com.jdmontalvo.vidcofre/.MainActivity
 if ($LASTEXITCODE -ne 0) { throw "No se pudo iniciar la app." }
 
 Write-Host "VidPlay instalada y lanzada."

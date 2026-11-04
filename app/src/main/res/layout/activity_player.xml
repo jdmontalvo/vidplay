@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="@android:color/black">
 
-    <com.vidplay.app.player.ZoomablePlayerLayout
+    <com.jdmontalvo.vidcofre.player.ZoomablePlayerLayout
         android:id="@+id/playerContainer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -22,7 +22,7 @@
             app:surface_type="texture_view"
             app:use_controller="false" />
 
-    </com.vidplay.app.player.ZoomablePlayerLayout>
+    </com.jdmontalvo.vidcofre.player.ZoomablePlayerLayout>
 
     <androidx.compose.ui.platform.ComposeView
         android:id="@+id/controlsOverlay"

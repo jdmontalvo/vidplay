@@ -2,7 +2,9 @@
 
 Reproductor de vídeo local para Android, rápido y sin nube, con baúl cifrado para ocultar vídeos de la galería y del explorador de archivos.
 
-> El nombre de la app es **VidCofre**. El repositorio y el identificador interno siguen siendo `vidplay` / `com.vidplay.app` para no romper la ruta de actualización.
+> El nombre de la app es **VidCofre**. El repositorio se llama `vidplay`; el paquete de Play es `com.jdmontalvo.vidcofre` (el antiguo `com.vidplay.app` está reservado y no se pudo reutilizar).
+>
+> Las versiones antiguas de GitHub usaban `com.vidplay.app`: la app de Play es un paquete distinto, se instala aparte y no se actualiza sobre aquellas.
 
 - **Kotlin + Media3 ExoPlayer 1.11.1** con decodificación hardware y **NextLib FFmpeg** como respaldo software.
 - **Compose + Material 3** para biblioteca, baúl y ajustes; reproductor nativo con gestos propios.
@@ -50,7 +52,7 @@ Si HyperOS bloquea `adb install`:
 .\scripts\build-personal.ps1
 ```
 
-Genera un APK sin SDK de anuncios, sin permiso de Internet y con el paquete `com.vidplay.app.personal` (se instala al lado de la versión de Play, sin compartir baúl). Se copia a `personal\`, una carpeta ignorada por Git: **no se sube al repositorio**.
+Genera un APK sin SDK de anuncios, sin permiso de Internet y con el paquete `com.jdmontalvo.vidcofre.personal` (se instala al lado de la versión de Play, sin compartir baúl). Se copia a `personal\`, una carpeta ignorada por Git: **no se sube al repositorio**.
 
 ## Release para Play Store
 
