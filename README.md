@@ -102,6 +102,7 @@ La app se compila dentro de Ubuntu 24.04 con JDK 17, Android SDK 36, build-tools
 ## Documentación
 
 - [AGENTS.md](AGENTS.md): guía técnica completa y estado del proyecto.
+- [UPLOAD.md](UPLOAD.md): runbook de subida, versiones y pistas de Play.
 - [PLAYSTORE.md](PLAYSTORE.md): textos de ficha, formularios y pasos de publicación.
 - [TESTING.md](TESTING.md): hooks de depuración y matriz de pruebas.
 - [CHECKLIST_PLAY_STORE.md](CHECKLIST_PLAY_STORE.md): pasos de publicación.

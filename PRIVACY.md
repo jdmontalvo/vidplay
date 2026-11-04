@@ -2,6 +2,8 @@
 
 Última actualización: 24 de octubre de 2026
 
+Versión web: <https://jdmontalvo.github.io/vidplay/privacy.html> (si la página aún no está publicada, este archivo del repositorio es la referencia).
+
 VidCofre es un reproductor de vídeo local para Android con un baúl cifrado. **Los vídeos, las miniaturas y el contenido del baúl nunca salen del dispositivo.** La versión publicada en Google Play muestra publicidad; la versión personal (paquete `com.vidplay.app.personal`) no incluye anuncios ni permiso de Internet.
 
 ## Qué datos usa la app

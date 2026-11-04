@@ -134,6 +134,19 @@ ffmpeg -i input.mp4 -c copy sample.ts
 
 El debug usa los IDs de prueba de Google: nunca hay ingresos ni riesgo de clic inválido.
 
+Para probar en un dispositivo donde HyperOS bloquee la inyección de toques, añade a `ads.properties`:
+
+```properties
+adAnchorIndex=1   # tarjeta visible sin desplazar (producción: 6)
+adTestMode=true   # ignora el tope de 1/hora (producción: false)
+```
+
+Los eventos del controller se registran con la etiqueta `VidCofreAds`:
+
+```powershell
+adb logcat -s VidCofreAds
+```
+
 - [ ] Con permiso de vídeo y al menos un vídeo, abrir la biblioteca: el formulario de consentimiento UMP aparece si es la primera vez.
 - [ ] Aceptar o rechazar; en ambos casos la app sigue funcionando.
 - [ ] La tarjeta "Patrocinado" aparece tras el sexto vídeo, nunca como primera tarjeta.

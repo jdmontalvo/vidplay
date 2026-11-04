@@ -53,6 +53,8 @@ Salida: `app\build\outputs\bundle\playRelease\app-play-release.aab`.
 - [ ] Crear la app con el nombre **VidCofre** y el paquete `com.vidplay.app`.
 - [ ] Categoría: Video players & editors.
 - [ ] Subir el AAB a **Internal testing** y probar en un dispositivo limpio.
+- [ ] Publicar `docs/` con GitHub Pages y usar `privacy.html` como política.
+- [ ] Icono `store/icon-512.png` y feature graphic `store/feature-graphic-1024x500.png`.
 - [ ] Completar **App content**:
   - [ ] Política de privacidad: URL pública (GitHub Pages o similar).
   - [ ] Data safety: ubicación aproximada, interacciones en la app, diagnósticos e identificadores de dispositivo/ID de publicidad; cifrado en tránsito; compartido con terceros; finalidad publicidad/analítica/fraude.

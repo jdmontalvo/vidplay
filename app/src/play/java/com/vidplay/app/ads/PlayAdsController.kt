@@ -30,6 +30,7 @@ import com.google.android.libraries.ads.mobile.sdk.nativead.NativeAdEventCallbac
 import com.google.android.libraries.ads.mobile.sdk.nativead.NativeAdLoader
 import com.google.android.libraries.ads.mobile.sdk.nativead.NativeAdLoaderCallback
 import com.google.android.libraries.ads.mobile.sdk.nativead.NativeAdRequest
+import com.google.android.ump.ConsentDebugSettings
 import com.google.android.ump.ConsentInformation
 import com.google.android.ump.ConsentRequestParameters
 import com.google.android.ump.UserMessagingPlatform
@@ -84,6 +85,12 @@ class PlayAdsController(private val context: Context) : AdsController {
     }
 
     override fun onLibraryVisible() {
+        Log.d(
+            TAG,
+            "onLibraryVisible enabled=$enabled adsEnabled=${BuildConfig.ADS_ENABLED} " +
+                "configured=${BuildConfig.ADS_CONFIGURED} activity=${activityRef?.get() != null} " +
+                "ad=${nativeAdState.value != null} loading=$loading consentResolved=$consentResolved",
+        )
         if (!enabled || dismissedThisSession) return
         val activity = activityRef?.get() ?: return
         if (nativeAdState.value != null || loading) return
@@ -99,12 +106,16 @@ class PlayAdsController(private val context: Context) : AdsController {
         consentInformation = information
         information.requestConsentInfoUpdate(
             activity,
-            ConsentRequestParameters.Builder().build(),
+            consentParameters(),
             {
-                UserMessagingPlatform.loadAndShowConsentFormIfRequired(activity) {
+                UserMessagingPlatform.loadAndShowConsentFormIfRequired(activity) { formError ->
                     consentInFlight = false
                     consentResolved = true
                     updatePrivacyOptions()
+                    Log.d(
+                        TAG,
+                        "consent form done error=${formError?.message} canRequest=${information.canRequestAds()}",
+                    )
                     if (information.canRequestAds()) loadIfAllowed()
                 }
             },
@@ -161,6 +172,23 @@ class PlayAdsController(private val context: Context) : AdsController {
         }
     }
 
+    /**
+     * Debug builds pretend to be in the EEA so the consent form can be tested
+     * on a device outside Europe. Release builds never use debug geography.
+     */
+    private fun consentParameters(): ConsentRequestParameters {
+        val builder = ConsentRequestParameters.Builder()
+        if (BuildConfig.DEBUG) {
+            val debugSettings = ConsentDebugSettings.Builder(context)
+                .setDebugGeography(ConsentDebugSettings.DebugGeography.DEBUG_GEOGRAPHY_EEA)
+            if (DEBUG_TEST_DEVICE.isNotBlank()) {
+                debugSettings.addTestDeviceHashedId(DEBUG_TEST_DEVICE)
+            }
+            builder.setConsentDebugSettings(debugSettings.build())
+        }
+        return builder.build()
+    }
+
     private fun updatePrivacyOptions() {
         _privacyOptionsRequired.value =
             consentInformation?.privacyOptionsRequirementStatus ==
@@ -170,10 +198,15 @@ class PlayAdsController(private val context: Context) : AdsController {
     private fun loadIfAllowed() {
         if (!enabled || dismissedThisSession) return
         if (nativeAdState.value != null || loading) return
-        if (!capAllows()) return
+        if (!capAllows()) {
+            Log.d(TAG, "loadIfAllowed: frequency cap active")
+            return
+        }
 
+        Log.d(TAG, "loadIfAllowed: requesting native ad")
         loading = true
         ensureSdk {
+            Log.d(TAG, "loadIfAllowed: SDK ready, loading unit ${BuildConfig.ADMOB_NATIVE_UNIT_ID}")
             val request = NativeAdRequest.Builder(
                 BuildConfig.ADMOB_NATIVE_UNIT_ID,
                 listOf(NativeAd.NativeAdType.NATIVE),
@@ -184,6 +217,7 @@ class PlayAdsController(private val context: Context) : AdsController {
                     override fun onNativeAdLoaded(nativeAd: NativeAd) {
                         mainHandler.post {
                             loading = false
+                            Log.d(TAG, "Native ad loaded")
                             nativeAd.adEventCallback = object : NativeAdEventCallback {
                                 override fun onAdClicked() = Unit
                             }
@@ -220,6 +254,7 @@ class PlayAdsController(private val context: Context) : AdsController {
                 mainHandler.post {
                     sdkReady = true
                     sdkInitializing = false
+                    Log.d(TAG, "MobileAds initialized")
                     val callbacks = pendingInit.toList()
                     pendingInit.clear()
                     callbacks.forEach { it() }
@@ -229,6 +264,7 @@ class PlayAdsController(private val context: Context) : AdsController {
     }
 
     private fun capAllows(): Boolean {
+        if (BuildConfig.AD_TEST_MODE) return true
         val now = System.currentTimeMillis()
         val lastLoad = prefs.getLong(KEY_LAST_LOAD, 0L)
         if (now - lastLoad < MIN_INTERVAL_MS) return false
@@ -306,5 +342,8 @@ class PlayAdsController(private val context: Context) : AdsController {
         const val KEY_LOADS = "loads_today"
         const val MIN_INTERVAL_MS = 60L * 60L * 1000L
         const val MAX_PER_DAY = 4
+
+        /** Hashed id of the debug device, printed by UMP in logcat. */
+        const val DEBUG_TEST_DEVICE = ""
     }
 }

@@ -10,8 +10,10 @@
 | Etiquetas | video player, offline, privacidad, reproductor |
 | Precio | Gratis (con anuncios) |
 | Email de contacto | davidmontalvo59@gmail.com |
-| Web | `https://github.com/jdmontalvo/vidplay` |
-| Privacidad | URL pública de `PRIVACY.md` (GitHub Pages) |
+| Web | `https://jdmontalvo.github.io/vidplay/` (GitHub Pages, carpeta `docs/`) |
+| Privacidad | `https://jdmontalvo.github.io/vidplay/privacy.html` |
+| Icono | `store/icon-512.png` |
+| Gráfico destacado | `store/feature-graphic-1024x500.png` |
 
 ## Textos (ES)
 
@@ -116,14 +118,16 @@ Fuente: <https://developers.google.com/admob/android/next-gen/privacy/play-data-
 
 ## AdMob y `app-ads.txt`
 
-1. Publica `PRIVACY.md` como página web (GitHub Pages) y usa esa URL en la ficha.
-2. Publica en la raíz del mismo dominio:
+1. Publica `docs/` con GitHub Pages (Settings → Pages → rama `main`, carpeta `/docs`).
+2. La ficha usa como web `https://jdmontalvo.github.io/vidplay/` y como privacidad `https://jdmontalvo.github.io/vidplay/privacy.html`.
+3. `app-ads.txt` debe estar en la **raíz del dominio**, no en una subcarpeta. Para GitHub Pages eso obliga a un repo `jdmontalvo.github.io` con el archivo en la raíz:
 
 ```text
 google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0
 ```
 
-3. Usa el App ID `ca-app-pub-…~…` en `ads.properties` (`admobAppId`) y la unidad nativa en `nativeUnitId`.
+   Si no quieres crear ese repo, deja `app-ads.txt` sin publicar: no bloquea los anuncios, pero reduce la demanda.
+4. Usa el App ID `ca-app-pub-…~…` en `ads.properties` (`admobAppId`) y la unidad nativa en `nativeUnitId`.
 
 ## Notas para revisión y testers
 

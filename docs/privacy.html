@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Política de privacidad — VidCofre</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #0B0B10;
+    color: #E8E8F0;
+    font: 16px/1.65 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 760px; margin: 0 auto; padding: 40px 20px 80px; }
+  header { display: flex; align-items: center; gap: 14px; margin-bottom: 28px; }
+  .logo {
+    width: 48px; height: 48px; border-radius: 12px; background: #241C4A;
+    display: grid; place-items: center; flex: none;
+  }
+  .logo svg { width: 26px; height: 26px; }
+  h1 { font-size: 28px; line-height: 1.2; margin: 0; }
+  h2 { font-size: 19px; margin: 32px 0 8px; color: #B9AEFF; }
+  p, li { color: #C9C9D6; }
+  ul { padding-left: 22px; }
+  a { color: #8B7CFF; }
+  .meta { color: #8A8A9E; font-size: 14px; margin-top: 4px; }
+  .card {
+    background: #15151E; border: 1px solid #26263A; border-radius: 16px;
+    padding: 18px 20px; margin: 20px 0;
+  }
+  .card h2 { margin-top: 0; }
+  code { background: #1E1E2B; padding: 1px 6px; border-radius: 5px; font-size: 14px; }
+  footer { margin-top: 44px; color: #8A8A9E; font-size: 14px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="logo" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="#fff"/></svg>
+    </div>
+    <div>
+      <h1>Política de privacidad</h1>
+      <div class="meta">VidCofre · Última actualización: 24 de octubre de 2026</div>
+    </div>
+  </header>
+
+  <p>
+    VidCofre es un reproductor de vídeo local para Android con un baúl cifrado,
+    desarrollado por un desarrollador independiente. <strong>Los vídeos, las
+    miniaturas y el contenido del baúl nunca salen del dispositivo.</strong>
+    La versión publicada en Google Play muestra publicidad; la versión personal
+    (<code>com.vidplay.app.personal</code>) no incluye anuncios ni permiso de
+    Internet.
+  </p>
+
+  <div class="card">
+    <h2>Qué datos usa la app</h2>
+    <ul>
+      <li><strong>Vídeos del dispositivo:</strong> solo se leen los vídeos a los que el usuario concede permiso, para mostrarlos y reproducirlos.</li>
+      <li><strong>Metadatos locales:</strong> nombres, duración, tamaño, miniaturas y posición de reproducción se guardan en la base de datos privada de la app.</li>
+      <li><strong>Baúl cifrado:</strong> los vídeos ocultos se cifran con AES-256-GCM y se guardan en el almacenamiento privado. La clave se protege con Android Keystore y un PIN de recuperación.</li>
+      <li><strong>Preferencias:</strong> ajustes de reproducción y del baúl en DataStore, dentro del almacenamiento privado.</li>
+      <li><strong>Anuncios:</strong> la versión de Play usa Google AdMob para mostrar un único anuncio nativo en la biblioteca, como máximo una vez por hora.</li>
+    </ul>
+  </div>
+
+  <h2>Publicidad (solo versión de Play)</h2>
+  <p>
+    VidCofre usa el SDK de Google Mobile Ads y la Plataforma de Mensajes al
+    Usuario (UMP) de Google. Antes de cargar el primer anuncio se pide el
+    consentimiento cuando la ley lo exige (Espacio Económico Europeo, Reino
+    Unido, Suiza y varios estados de EE. UU.).
+  </p>
+  <p>Según la documentación de Google, el SDK de anuncios puede recoger y compartir automáticamente:</p>
+  <ul>
+    <li><strong>Dirección IP</strong>, que puede usarse para estimar la ubicación aproximada.</li>
+    <li><strong>Interacciones con la app</strong>, como aperturas, pulsaciones y visualizaciones de vídeo.</li>
+    <li><strong>Información de diagnóstico</strong>, como tiempos de inicio, bloqueos y consumo de energía.</li>
+    <li><strong>Identificadores de dispositivo y cuenta</strong>, incluidos el ID de publicidad de Android y el App Set ID.</li>
+  </ul>
+  <p>
+    Estos datos se usan para publicidad, analítica y prevención de fraude, se
+    cifran en tránsito con TLS y se comparten con Google y sus socios
+    publicitarios. VidCofre <strong>no</strong> envía a Google el nombre de tus
+    vídeos, sus rutas, sus miniaturas ni ningún dato del baúl.
+  </p>
+  <p>
+    Puedes cambiar o retirar el consentimiento en <strong>Ajustes → Opciones de
+    privacidad</strong>. Más información:
+    <a href="https://policies.google.com/privacy" rel="noopener">Privacidad de Google</a> ·
+    <a href="https://policies.google.com/technologies/ads" rel="noopener">Publicidad de Google</a> ·
+    <a href="https://support.google.com/admob/answer/6128543" rel="noopener">Cómo funciona AdMob</a>.
+    También puedes restablecer o eliminar el ID de publicidad desde los ajustes de Android.
+  </p>
+
+  <h2>Qué no hace</h2>
+  <ul>
+    <li>No crea cuentas.</li>
+    <li>No sube vídeos, miniaturas ni metadatos a ningún servidor.</li>
+    <li>No comparte archivos del baúl.</li>
+    <li>No accede a contactos, ubicación precisa, cámara ni micrófono.</li>
+    <li>No usa analíticas propias ni rastreadores adicionales fuera del SDK de anuncios.</li>
+  </ul>
+
+  <h2>Permisos</h2>
+  <ul>
+    <li>Lectura de vídeos (MediaStore) para la biblioteca.</li>
+    <li>Notificaciones para la reproducción y las transferencias del baúl.</li>
+    <li>Servicios en primer plano para reproducir y para cifrar/restaurar.</li>
+    <li>Biometría/credencial del dispositivo para desbloquear el baúl.</li>
+    <li>Wake lock para mantener la reproducción.</li>
+    <li><strong>Internet</strong> (solo versión de Play) para descargar el anuncio. Sin conexión la app funciona igual y no muestra anuncio.</li>
+  </ul>
+  <p>El usuario puede revocar los permisos desde Ajustes de Android.</p>
+
+  <h2>Baúl y nubes</h2>
+  <p>
+    El cifrado protege los archivos en el almacenamiento de la app. Si un vídeo
+    ya estaba respaldado en Google Fotos u otro servicio antes de ocultarlo, esa
+    copia en la nube no se elimina desde VidCofre. Desinstalar la app o borrar
+    sus datos elimina el baúl y su clave de forma irreversible.
+  </p>
+
+  <h2>Conservación y eliminación</h2>
+  <p>
+    Los datos locales (biblioteca, ajustes, baúl) se eliminan al desinstalar la
+    app o borrar sus datos. Los datos asociados a la publicidad los gestiona
+    Google según su política; puedes limitar su uso con las opciones de
+    privacidad descritas arriba.
+  </p>
+
+  <h2>Menores</h2>
+  <p>
+    VidCofre no está dirigida específicamente a menores y no recopila datos de
+    ninguna persona por su cuenta. La publicidad se configura con una
+    clasificación máxima apta para todos los públicos.
+  </p>
+
+  <h2>Cambios</h2>
+  <p>Los cambios de esta política se publicarán en esta página y en el repositorio.</p>
+
+  <h2>Contacto</h2>
+  <p>
+    Dudas o incidencias:
+    <a href="https://github.com/jdmontalvo/vidplay/issues" rel="noopener">github.com/jdmontalvo/vidplay/issues</a>.
+  </p>
+
+  <footer>
+    VidCofre es software libre bajo GNU GPL-3.0 ·
+    <a href="https://github.com/jdmontalvo/vidplay" rel="noopener">Código fuente</a>
+  </footer>
+</main>
+</body>
+</html>

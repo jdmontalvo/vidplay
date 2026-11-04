@@ -65,8 +65,8 @@ import coil3.video.videoFrameMillis
 import com.vidplay.app.data.media.VideoItem
 import androidx.compose.ui.platform.LocalContext
 
-/** Ads appear after the first six videos, never as the first card. */
-private const val AD_ANCHOR_INDEX = 6
+/** Position of the ad card inside the library (6 in production). */
+private val AD_ANCHOR_INDEX: Int = com.vidplay.app.BuildConfig.AD_ANCHOR_INDEX
 
 @Composable
 fun VideoThumbnail(

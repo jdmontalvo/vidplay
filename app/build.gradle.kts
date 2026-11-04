@@ -28,6 +28,14 @@ val testNativeUnitId = "ca-app-pub-3940256099942544/2247696110"
 val releaseAdMobAppId = adsProperties.getProperty("admobAppId").orEmpty()
 val releaseNativeUnitId = adsProperties.getProperty("nativeUnitId").orEmpty()
 val adsConfigured = releaseAdMobAppId.isNotBlank() && releaseNativeUnitId.isNotBlank()
+// Position of the ad card inside the library. 6 in production; 1 is useful for
+// local visual checks on devices where input injection is blocked.
+val adAnchorIndex = adsProperties.getProperty("adAnchorIndex")?.toIntOrNull() ?: 6
+// Local-only switch that ignores the frequency cap while checking the ad card.
+val adTestMode = adsProperties.getProperty("adTestMode")?.toBoolean() ?: false
+// Allows -PversionCode=3 for Closed testing and 4 for Production without editing
+// the build file (Play requires an increasing versionCode per upload).
+val versionCodeOverride = (project.findProperty("versionCode") as String?)?.toIntOrNull()
 
 android {
     namespace = "com.vidplay.app"
@@ -37,7 +45,7 @@ android {
         applicationId = "com.vidplay.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 2
+        versionCode = versionCodeOverride ?: 2
         versionName = "1.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -53,6 +61,8 @@ android {
         buildConfigField("boolean", "ADS_CONFIGURED", "false")
         buildConfigField("String", "ADMOB_APP_ID", "\"$testAdMobAppId\"")
         buildConfigField("String", "ADMOB_NATIVE_UNIT_ID", "\"$testNativeUnitId\"")
+        buildConfigField("int", "AD_ANCHOR_INDEX", adAnchorIndex.toString())
+        buildConfigField("boolean", "AD_TEST_MODE", adTestMode.toString())
         manifestPlaceholders["admobAppId"] = testAdMobAppId
     }
 

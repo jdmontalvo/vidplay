@@ -108,6 +108,13 @@ Release:
 
 `ads.properties` (plantilla en `ads.properties.example`) aporta `admobAppId` y `nativeUnitId`. Si falta, la release compila con `ADS_CONFIGURED=false` y no pide anuncios.
 
+Para pruebas locales en un dispositivo donde HyperOS bloquee la inyección de toques, `ads.properties` acepta además:
+
+```properties
+adAnchorIndex=1   # mueve la tarjeta al segundo hueco (producción: 6)
+adTestMode=true   # ignora el tope de 1/hora (producción: false o ausente)
+```
+
 ## Estructura
 
 ```text
@@ -138,6 +145,9 @@ app/src/main/java/com/vidplay/app/
 
 app/src/play/                  # AdsProvider, PlayAdsController, layout ad_native_card.xml
 app/src/foss/                  # AdsProvider no-op, strings "VidCofre Personal"
+
+docs/                          # GitHub Pages: privacidad e índice
+store/                         # icono 512 y feature graphic de la ficha
 ```
 
 ## Baúl: formato y seguridad
@@ -169,7 +179,8 @@ app/src/foss/                  # AdsProvider no-op, strings "VidCofre Personal"
 
 - Solo flavor `play`. El controller vive en `app/src/play` y se crea desde `AppContainer`.
 - Un único anuncio nativo en la pestaña "Vídeos", tras el sexto vídeo, con etiqueta "Patrocinado" y "Ocultar anuncio".
-- Tope en `SharedPreferences` (`vidplay_ads`): 3 600 000 ms entre cargas y 4 cargas/día. Además, tope de 1/hora en el panel de AdMob.
+- Tope en `SharedPreferences` (`vidplay_ads`): 3 600 000 ms entre cargas y 4 cargas/día. Además, tope de 1/hora en el panel de AdMob. `adTestMode` en `ads.properties` lo ignora solo en builds locales.
+- Posición configurable con `AD_ANCHOR_INDEX` (`adAnchorIndex`, por defecto 6).
 - Sin anuncios en Carpetas, Baúl, Ajustes, búsqueda, reproductor ni PiP. No se pide anuncio si no hay permiso de vídeo, si la biblioteca está vacía o si el usuario lo ocultó en la sesión.
 - Consentimiento con UMP en cada arranque; el formulario se muestra al abrir la biblioteca. `privacyOptionsRequired` habilita la entrada en Ajustes.
 - Debug y pruebas cerradas usan IDs de prueba de Google. Nunca pulsar anuncios reales.

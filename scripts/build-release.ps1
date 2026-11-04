@@ -1,5 +1,6 @@
 param(
-    [switch]$Apk
+    [switch]$Apk,
+    [int]$VersionCode = 0
 )
 
 $ErrorActionPreference = "Stop"
@@ -21,13 +22,14 @@ if ($LASTEXITCODE -ne 0) {
 $mountProject = "type=bind,source=$root,target=/workspace"
 $mountCache = "type=volume,source=vidplay-gradle-cache,target=/gradle-cache"
 $task = if ($Apk) { ":app:assemblePlayRelease" } else { ":app:bundlePlayRelease" }
+$versionArg = if ($VersionCode -gt 0) { "-PversionCode=$VersionCode" } else { "" }
 
 docker run --rm `
     --mount $mountProject `
     --mount $mountCache `
     -w /workspace `
     $image `
-    bash -lc "./gradlew $task --no-daemon --stacktrace"
+    bash -lc "./gradlew $task $versionArg --no-daemon --stacktrace"
 
 if ($LASTEXITCODE -ne 0) { throw "La compilación release falló." }
 
@@ -39,8 +41,22 @@ if ($Apk) {
 if (-not (Test-Path $artifact)) { throw "No se encontró el artefacto: $artifact" }
 Write-Host "Artefacto release generado: $artifact"
 
-if (-not (Test-Path (Join-Path $root "ads.properties"))) {
+$adsFile = Join-Path $root "ads.properties"
+if (-not (Test-Path $adsFile)) {
     Write-Host ""
     Write-Host "AVISO: falta ads.properties. Este AAB compila con los anuncios DESACTIVADOS." -ForegroundColor Yellow
     Write-Host "Copia ads.properties.example a ads.properties, rellena tus IDs de AdMob y vuelve a compilar." -ForegroundColor Yellow
+} else {
+    $adsText = Get-Content $adsFile -Raw
+    if ($adsText -match "3940256099942544") {
+        Write-Host ""
+        Write-Host "AVISO: ads.properties contiene los IDs de PRUEBA de Google." -ForegroundColor Yellow
+        Write-Host "Este AAB solo sirve para Internal/Closed testing; no lo promociones a produccion." -ForegroundColor Yellow
+    }
+    if ($adsText -match "adTestMode\s*=\s*true") {
+        Write-Host "AVISO: adTestMode=true; el tope de frecuencia esta desactivado en este build." -ForegroundColor Yellow
+    }
+    if ($adsText -match "adAnchorIndex\s*=\s*(?!6\b)\d+") {
+        Write-Host "AVISO: adAnchorIndex distinto de 6; el anuncio no esta en la posicion de produccion." -ForegroundColor Yellow
+    }
 }
